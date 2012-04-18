@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" android:layout_width="match_parent"
+	android:layout_height="match_parent" android:weightSum="1">
+	<HorizontalScrollView android:id="@+id/horizontalScrollView1"
+		android:layout_height="22dip" android:layout_width="match_parent">
+		<LinearLayout android:id="@+id/linearLayout1"
+			android:layout_width="match_parent" android:layout_height="match_parent"
+			android:orientation="horizontal">
+			<TextView android:textAppearance="?android:attr/textAppearanceSmall"
+				android:text="TextView" android:layout_height="match_parent"
+				android:layout_width="319dp" android:gravity="center_vertical"
+				android:id="@+id/item_cf"></TextView>
+		</LinearLayout>
+	</HorizontalScrollView>
+
+</LinearLayout>

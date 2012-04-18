@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/mitem01"
+        android:title="Statistiche"/>
+    <item
+        android:id="@+id/mitem02"
+        android:title="Salva XML"/>
+    <item
+        android:id="@+id/mitem04"
+        android:title="Elimina XML"/>
+    <item
+        android:id="@+id/mitem03"
+        android:title="Aggiorna da server"/>
+
+</menu>

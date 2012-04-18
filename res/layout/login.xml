@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true" >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <!-- Header Starts -->
+
+        <RelativeLayout
+            android:id="@+id/header"
+            android:layout_width="fill_parent"
+            android:layout_height="100dp"
+            android:background="@layout/header_login"
+            android:paddingBottom="5dip"
+            android:paddingTop="5dip" >
+
+            <!-- Logo Start -->
+
+            <ImageView
+                android:id="@+id/imageView1"
+                android:layout_width="97dp"
+                android:layout_height="71dp"
+                android:src="@drawable/logo" />
+
+            <!-- Logo Ends -->
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/imageView1"
+                android:layout_marginTop="16dp"
+                android:layout_toRightOf="@+id/imageView1"
+                android:text="Università degli Studi di"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="#000000"
+                android:textSize="15sp"
+                android:typeface="serif" />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/imageView1"
+                android:layout_alignLeft="@+id/textView1"
+                android:text="Verona"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="#000000"
+                android:textSize="25sp"
+                android:typeface="serif" />
+        </RelativeLayout>
+
+        <!-- Header Ends -->
+        <!-- Footer Starts -->
+
+        <RelativeLayout
+            android:id="@+id/footer"
+            android:layout_width="fill_parent"
+            android:layout_height="35dp"
+            android:layout_alignParentBottom="true"
+            android:background="@layout/footer_login" >
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:padding="5dp"
+                android:text="© 2011-2012 Vallicella Davide"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="#000000"
+                android:textSize="12sp"
+                android:typeface="serif" />
+        </RelativeLayout>
+        <!-- Footer Ends -->
+        <!-- Login Form -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/footer"
+            android:layout_below="@id/header"
+            android:background="@drawable/dark_login"
+            android:orientation="vertical"
+            android:padding="10dip"
+            android:paddingLeft="3dp" >
+
+            <EditText
+                android:id="@+id/username"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dip"
+                android:layout_marginTop="5dip"
+                android:hint="user id"
+                android:imeActionLabel="Next"
+                android:imeOptions="actionNext"
+                android:singleLine="true" />
+
+            <EditText
+                android:id="@+id/password"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dip"
+                android:hint="password"
+                android:imeActionLabel="Next"
+                android:imeOptions="actionNext"
+                android:password="true"
+                android:singleLine="true" />
+            <!-- Login button -->
+
+            <CheckBox
+                android:id="@+id/id_remember_up"
+                android:layout_width="143dp"
+                android:layout_height="wrap_content"
+                android:imeActionLabel="Next"
+                android:imeOptions="actionNext"
+                android:paddingLeft="40dp"
+                android:text="Stay signed in" />
+
+            <Button
+                android:id="@+id/login"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dip"
+                android:imeOptions="actionDone"
+                android:text="Login" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</ScrollView>

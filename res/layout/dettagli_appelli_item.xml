@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="150dp"
+    android:orientation="horizontal" 
+    android:background="@drawable/list_item_background_special">
+
+    <TableLayout
+        android:id="@+id/LinearLayout01"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical"
+        android:paddingLeft="10sp"
+        android:paddingRight="10sp"
+        android:paddingTop="5dip" >
+
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/doc_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:text="Docenti:"
+                android:textColor="#000000"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:typeface="sans" >
+            </TextView>
+
+            <!--
+            TextView
+                android:id="@+id/docenti_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dip"
+                android:text="TextView"
+                android:textAppearance="?android:attr/textAppearanceSmall" >
+            </TextView
+            -->
+        </TableRow>
+
+        <LinearLayout
+            android:id="@+id/LinearLayout09"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dip" >
+
+            <TextView
+                android:id="@+id/m_id"
+                android:layout_width="50dip"
+                android:layout_height="wrap_content"
+                android:text="Modulo"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textSize="13sp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:typeface="sans" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/modulo_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dip"
+                android:gravity="left"
+                android:textColor="#0d3d64"
+                android:text="-----------------------"
+                android:textAppearance="?android:attr/textAppearanceSmall" >
+            </TextView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LinearLayout02"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dip" >
+
+            <TextView
+                android:id="@+id/t_id"
+                android:layout_width="70dip"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dip"
+                android:layout_weight="0.93"
+                android:gravity="center"
+                android:text="Tipo Prova"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textSize="13sp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:typeface="sans" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/d_id"
+                android:layout_width="69dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dip"
+                android:layout_marginLeft="5dip"
+                android:layout_weight="0.41"
+                android:gravity="center"
+                android:text="Data"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textSize="13sp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:typeface="sans" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/o_id"
+                android:layout_width="102dp"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="5dip"
+                android:layout_marginLeft="5dip"
+                android:gravity="center"
+                android:text="Ora"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textSize="13sp"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:typeface="sans" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/LinearLayout02"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dip" >
+
+            <TextView
+                android:id="@+id/tipo_id"
+                android:layout_width="70dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="5.88"
+                android:gravity="center"
+                android:inputType="textMultiLine"
+                android:maxLines="3"
+                android:text="TextView"
+                android:textColor="#0d3d64"
+                android:textAppearance="?android:attr/textAppearanceSmall" >
+            </TextView>
+
+            <TextView
+                android:id="@+id/data_id"
+                android:layout_width="80dip"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dip"
+                android:layout_weight="2.81"
+                android:gravity="center"
+                android:inputType="textMultiLine"
+                android:maxLines="3"
+                android:text="TextView"
+                android:textColor="#0d3d64"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <TextView
+                android:id="@+id/ora_id"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:inputType="textMultiLine"
+                android:maxLines="3"
+                android:text="TextView"
+                android:textColor="#0d3d64"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/LinearLayout02"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dip" >
+
+            <Button
+                android:id="@+id/prosegui_id"
+                android:layout_width="100dip"
+                android:layout_height="match_parent"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:text="Prosegui"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_idInfoApp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/prosegui_id"
+                android:layout_alignBottom="@+id/prosegui_id"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentRight="true"
+                android:gravity="center"
+                android:textColor="#000000"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+        </RelativeLayout>
+    </TableLayout>
+
+</RelativeLayout>

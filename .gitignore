@@ -3,3 +3,5 @@ gen
 lint.xml
 project.properties
 proguard.cfg
+.classpath
+.project
