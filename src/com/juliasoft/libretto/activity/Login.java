@@ -74,9 +74,6 @@ public class Login extends Activity implements OnClickListener {
 	private void init() {
 
 		html_pages = new HashMap<String, String>();
-		html_pages.put("LIB", null);
-		html_pages.put("INFO", null);
-		html_pages.put("ISCRIZ", null);
 
 		// initGUI
 		uname = (EditText) findViewById(R.id.username);
@@ -281,15 +278,13 @@ public class Login extends Activity implements OnClickListener {
 
 	@Override
 	protected void onResume() {
+		super.onResume();
+
 		if (cm != null) {
 			cm.reset();
 			html_pages.clear();
 			Log.i("INFO", "Reset CllientManager!");
 		}
-		cm = ConnectionManager.getInstance();
-		Log.i("INFO", "Start new CllientManager!");
-
-		super.onResume();
 	}
 
 	@Override
@@ -355,6 +350,10 @@ public class Login extends Activity implements OnClickListener {
 		protected void onPreExecute() {
 			dialog.setMessage("Loading data ...");
 			dialog.show();
+			if (cm == null) {
+				cm = ConnectionManager.getInstance();
+				Log.i("INFO", "Start new ClientManager!");
+			}
 		}
 
 		@Override

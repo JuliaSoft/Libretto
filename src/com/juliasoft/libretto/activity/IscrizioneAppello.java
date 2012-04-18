@@ -157,7 +157,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 					String iscrtt = tds.get(1).text();
 					if (tds.get(1).select("input[type=submit]").isEmpty()) {
 						esame.setEnable(false);
-						iscrtt.replace("Iscrizioni chiuse", "");
+						iscrtt = iscrtt.replace("Iscrizioni chiuse", "");
 					}
 					esame.setIscritti(iscrtt);
 
