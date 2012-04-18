@@ -1,0 +1,7 @@
+This is an Android application that connects too the ESSE3
+database used by Italian universities to store the students curricula.
+It allows one to show the curriculum of the student, the exams already
+passed and it allows one to register to future exams.
+
+Original author: Davide Vallicella (vallicella DOT davide AT gmail DOT com)
+Maintained by: Fausto Spoto (fausto.spoto@juliasoft.com)
