@@ -36,6 +36,7 @@ import android.widget.TextView;
 
 public class Iscrizioni extends ExpandableListActivity {
 
+	@SuppressWarnings("unused")
 	private static final String TAG = Iscrizioni.class.getName();
 	private static final int INIT = 0;
 	private static final int METHOD_DRAW_SELECTOR_ON_TOP = 1;
