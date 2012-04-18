@@ -86,7 +86,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 
 		});
 
-		retriveData(page_HTML);
+		retrieveData(page_HTML);
 	}
 
 	private void reset() {
@@ -94,7 +94,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 		childData.clear();
 	}
 
-	private void retriveData(String page_HTML) {
+	private void retrieveData(String page_HTML) {
 		if (page_HTML == null) {
 			return;
 		}
@@ -176,7 +176,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 					String iscrtt = tds.get(1).text();
 					if (tds.get(1).select("input[type=submit]").isEmpty()) {
 						esame.setEnable(false);
-						iscrtt.replace("Iscrizioni chiuse", "");
+						iscrtt = iscrtt.replace("Iscrizioni chiuse", "");
 					}
 					esame.setIscritti(iscrtt);
 					tds = trs.get(1).select("td.Content_Chiaro");
@@ -438,7 +438,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 			if (isSuccess) {
 				try {
 					reset();
-					retriveData(Utils.inputStreamToString(cm
+					retrieveData(Utils.inputStreamToString(cm
 							.getSsolConnection().getEntity().getContent()));
 				} catch (Exception e) {
 					Log.e(TAG, e.getMessage());

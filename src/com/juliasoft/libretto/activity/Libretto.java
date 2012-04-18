@@ -77,7 +77,6 @@ public class Libretto extends ListActivity {
 
 	private SeparatedListAdapter adapter;
 	private AlertDialog builder;
-	// private AlertDialog builder2;
 	private ConnectionManager cm;
 
 	@Override

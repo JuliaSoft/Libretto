@@ -13,11 +13,6 @@ import android.widget.TextView;
 
 public class Medie extends Activity {
 
-	private String media_aritm;
-	private String media_pond;
-	private String num;
-	private int crediti;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -28,10 +23,10 @@ public class Medie extends Activity {
 	private void init() {
 		Intent intent = getIntent();
 		String pkg = getPackageName();
-		media_aritm = intent.getStringExtra(pkg + ".aritm");
-		media_pond = intent.getStringExtra(pkg + ".pond");
-		num = intent.getStringExtra(pkg + ".num");
-		crediti = Integer.parseInt(intent.getStringExtra(pkg + ".crediti"));
+		String media_aritm = intent.getStringExtra(pkg + ".aritm");
+		String media_pond = intent.getStringExtra(pkg + ".pond");
+		String num = intent.getStringExtra(pkg + ".num");
+		int crediti = Integer.parseInt(intent.getStringExtra(pkg + ".crediti"));
 
 		TextView percent = (TextView) findViewById(R.id.tv_media_percent);
 		int x100 = (int) Math.round(((double) crediti * 100) / 180);

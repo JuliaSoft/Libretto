@@ -2,6 +2,7 @@ package com.juliasoft.libretto.activity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
 import com.juliasoft.libretto.utils.Utils;
@@ -42,13 +43,8 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 	private ArrayAdapter<String> adapterInsegn;
 	private ArrayAdapter<String> adapterDocenti;
 
-	private ArrayList<HashMap<String, String>> maps;
-	private HashMap<String, String> facoltaMap;
-	private HashMap<String, String> corsoMap;
-	private HashMap<String, String> insegnMap;
-	private HashMap<String, String> docMap;
+	private ArrayList<Map<String, String>> maps;
 
-	private Spinner facolta;
 	private Spinner corso;
 	private Spinner insegnamento;
 	private Spinner docente;
@@ -68,18 +64,18 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 
 		cm = ConnectionManager.getInstance();
 
-		facoltaMap = new HashMap<String, String>();
-		corsoMap = new HashMap<String, String>();
-		insegnMap = new HashMap<String, String>();
-		docMap = new HashMap<String, String>();
+		final Map<String, String> facoltaMap = new HashMap<String, String>();
+		final Map<String, String> corsoMap = new HashMap<String, String>();
+		final Map<String, String> insegnMap = new HashMap<String, String>();
+		final Map<String, String> docMap = new HashMap<String, String>();
 
-		maps = new ArrayList<HashMap<String, String>>();
+		maps = new ArrayList<Map<String, String>>();
 		maps.add(facoltaMap);
 		maps.add(corsoMap);
 		maps.add(insegnMap);
 		maps.add(docMap);
 
-		facolta = (Spinner) findViewById(R.id.facolta);
+		Spinner facolta = (Spinner) findViewById(R.id.facolta);
 		corso = (Spinner) findViewById(R.id.corso);
 		insegnamento = (Spinner) findViewById(R.id.insegnamento);
 		docente = (Spinner) findViewById(R.id.docente);

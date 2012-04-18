@@ -30,13 +30,12 @@ public class InstallCert {
 	public static final String TAG = InstallCert.class.getName();
 	private String host;
 	private int port;
-	private File sd;
 	private File trust;
 
 	public InstallCert(String url, int port) {
 		this.host = url;
 		this.port = port;
-		sd = Environment.getExternalStorageDirectory();
+		File sd = Environment.getExternalStorageDirectory();
 		trust = new File(sd, "univr.esse3.cineca.it");
 	}
 

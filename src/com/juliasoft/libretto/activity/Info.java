@@ -57,21 +57,11 @@ public class Info extends Activity {
 
 	private static final String INFO_XML_FILE = "Info.xml";
 
-	private TextView utente;
-	private TextView matricola;
-	private TextView tipo;
-	private TextView profilo;
-	private TextView anno;
-	private TextView immatricolazione;
-	private TextView corso;
-	private TextView ordinamento;
-	private TextView percorso;
 	private ArrayList<TextView> listView;
 	private ArrayList<EditText> listEdit;
 	private ArrayList<String> listInfo;
-	AlertDialog ad;
+	private AlertDialog ad;
 	private AlertDialog builder;
-	private View edit_layout;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -84,18 +74,18 @@ public class Info extends Activity {
 		cm = ConnectionManager.getInstance();
 		listInfo = new ArrayList<String>();
 
-		utente = (TextView) findViewById(R.id.user);
-		matricola = (TextView) findViewById(R.id.id);
-		tipo = (TextView) findViewById(R.id.tipo);
-		profilo = (TextView) findViewById(R.id.profilo);
-		anno = (TextView) findViewById(R.id.anno);
-		immatricolazione = (TextView) findViewById(R.id.data_immatr);
-		corso = (TextView) findViewById(R.id.corso);
-		ordinamento = (TextView) findViewById(R.id.ordinamento);
-		percorso = (TextView) findViewById(R.id.percorso);
+		TextView utente = (TextView) findViewById(R.id.user);
+		TextView matricola = (TextView) findViewById(R.id.id);
+		TextView tipo = (TextView) findViewById(R.id.tipo);
+		TextView profilo = (TextView) findViewById(R.id.profilo);
+		TextView anno = (TextView) findViewById(R.id.anno);
+		TextView immatricolazione = (TextView) findViewById(R.id.data_immatr);
+		TextView corso = (TextView) findViewById(R.id.corso);
+		TextView ordinamento = (TextView) findViewById(R.id.ordinamento);
+		TextView percorso = (TextView) findViewById(R.id.percorso);
 
 		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		edit_layout = inflater.inflate(R.layout.info_edit, null);
+		View edit_layout = inflater.inflate(R.layout.info_edit, null);
 
 		listEdit = new ArrayList<EditText>();
 		EditText et = (EditText) edit_layout.findViewById(R.id.et_info_nome);
@@ -156,8 +146,7 @@ public class Info extends Activity {
 		lp.dimAmount = 0.5f;
 
 		builder.getWindow().setAttributes(lp);
-		builder.getWindow().addFlags(
-				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 
 		listView = new ArrayList<TextView>();
 		listView.add(utente);

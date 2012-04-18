@@ -77,13 +77,8 @@ public class Esse3HttpClient extends DefaultHttpClient {
 	protected CredentialsProvider createCredentialsProvider() {
 
 		if (cp == null) {
-			// Log.d(TAG, "Creating credentials provider");
 			cp = new BasicCredentialsProvider();
-
-			// Log.d(TAG, "Setting username: " + user + " and password: " +
-			// pass);
-			cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(
-					user, pass));
+			cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, pass));
 		}
 		return cp;
 	}

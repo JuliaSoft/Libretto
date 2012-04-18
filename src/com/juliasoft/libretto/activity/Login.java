@@ -2,6 +2,7 @@ package com.juliasoft.libretto.activity;
 
 import java.net.ConnectException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.security.auth.login.LoginException;
@@ -52,8 +53,7 @@ public class Login extends Activity implements OnClickListener {
 	private static final String PREF_REMEMBER = "remember";
 
 	private ConnectionManager cm;
-	private HashMap<String, String> html_pages;
-	private Intent intent;
+	private Map<String, String> html_pages;
 
 	private EditText uname;
 	private EditText pword;
@@ -238,7 +238,7 @@ public class Login extends Activity implements OnClickListener {
 
 			switch (msg.what) {
 			case SUCCESS:
-				intent = new Intent(getApplicationContext(), TabBar.class);
+				Intent intent = new Intent(getApplicationContext(), TabBar.class);
 				String pkg = getPackageName();
 				// setto i dati ricavati dal login
 				intent.putExtra(pkg + ".lib", html_pages.get("LIB"));

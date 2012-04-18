@@ -16,7 +16,6 @@ public class TabBar extends TabActivity implements OnClickListener {
 
 	public static final String TAG = TabActivity.class.getName();
 
-	private String lib, info, iscriz;
 	private Button ok;
 	private WindowManager.LayoutParams lp;
 	private AlertDialog dialog;
@@ -48,8 +47,8 @@ public class TabBar extends TabActivity implements OnClickListener {
 		String pkg = getPackageName();
 		Intent intent = getIntent();
 
-		lib = intent.getStringExtra(pkg + ".lib");
-		info = intent.getStringExtra(pkg + ".info");
+		String lib = intent.getStringExtra(pkg + ".lib");
+		String info = intent.getStringExtra(pkg + ".info");
 
 		Intent libretto = new Intent().setClass(this, Libretto.class);
 		libretto.putExtra(pkg + ".lib", lib);
@@ -78,7 +77,7 @@ public class TabBar extends TabActivity implements OnClickListener {
 		// ISCRIZIONI
 		Intent iscrizioni = new Intent();
 
-		iscriz = intent.getStringExtra(pkg + ".iscriz");
+		String iscriz = intent.getStringExtra(pkg + ".iscriz");
 		if (iscriz == null) {
 			// OLD
 			iscriz = intent.getStringExtra(pkg + ".iscriz_old");

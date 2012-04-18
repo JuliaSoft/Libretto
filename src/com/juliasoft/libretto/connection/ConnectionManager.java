@@ -28,9 +28,6 @@ public class ConnectionManager {
 	private String username;
 	private String password;
 
-	private Esse3HttpClient esse3;
-	private SsolHttpClient ssol;
-
 	private HttpConnection ssolConn;
 	private HttpConnection esse3Conn;
 
@@ -64,14 +61,14 @@ public class ConnectionManager {
 		isLogged = false;
 
 		// Login presso univr.esse3.cineca.it
-		esse3 = new Esse3HttpClient(username, password);
+		Esse3HttpClient esse3 = new Esse3HttpClient(username, password);
 		esse3Conn = new HttpConnection(esse3);
 		esse3Conn.get(Esse3HttpClient.AUTH_URI);
 		esse3Conn.getEntity();
 		esse3Conn.consumeContent();
 
 		// Login presso www.ssol.univr.it
-		ssol = new SsolHttpClient();
+		SsolHttpClient ssol = new SsolHttpClient();
 		ssolConn = new HttpConnection(ssol);
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("username", username);

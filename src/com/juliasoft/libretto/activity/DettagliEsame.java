@@ -22,16 +22,6 @@ import android.widget.TextView;
 public class DettagliEsame extends Activity {
 	private static final int CONNECTION_ERROR = 1;
 	private static final int LOGIN_ERROR = 2;
-	private TextView esame;
-	private TextView anno_corso;
-	private TextView aa_freq;
-	private TextView peso_crediti;
-	private TextView data_esame;
-	private TextView voto;
-	private TextView ric;
-	private TextView q_val;
-	private ImageView img;
-	private Button back;
 	private AlertDialog builder;
 
 	@Override
@@ -40,7 +30,6 @@ public class DettagliEsame extends Activity {
 
 		setContentView(R.layout.dettaggli_esame);
 		init();
-
 	}
 
 	private void init() {
@@ -57,16 +46,16 @@ public class DettagliEsame extends Activity {
 		String _q_val = intent.getStringExtra(pkg + ".q_val");
 		String _img = intent.getStringExtra(pkg + ".img");
 
-		esame = (TextView) findViewById(R.id.info_esame);
-		anno_corso = (TextView) findViewById(R.id.anno);
-		aa_freq = (TextView) findViewById(R.id.aa_freq);
-		peso_crediti = (TextView) findViewById(R.id.peso);
-		data_esame = (TextView) findViewById(R.id.data);
-		voto = (TextView) findViewById(R.id.voto);
-		ric = (TextView) findViewById(R.id.riconosciuta);
-		q_val = (TextView) findViewById(R.id.q_val);
-		img = (ImageView) findViewById(R.id.id_infoEsa_img);
-		back = (Button) findViewById(R.id.back);
+		TextView esame = (TextView) findViewById(R.id.info_esame);
+		TextView anno_corso = (TextView) findViewById(R.id.anno);
+		TextView aa_freq = (TextView) findViewById(R.id.aa_freq);
+		TextView peso_crediti = (TextView) findViewById(R.id.peso);
+		TextView data_esame = (TextView) findViewById(R.id.data);
+		TextView voto = (TextView) findViewById(R.id.voto);
+		TextView ric = (TextView) findViewById(R.id.riconosciuta);
+		TextView q_val = (TextView) findViewById(R.id.q_val);
+		ImageView img = (ImageView) findViewById(R.id.id_infoEsa_img);
+		Button back = (Button) findViewById(R.id.back);
 
 		builder = new AlertDialog.Builder(this).setTitle("Dettagli esame")
 				.setIcon(android.R.drawable.ic_dialog_alert).create();
@@ -83,8 +72,7 @@ public class DettagliEsame extends Activity {
 		lp.dimAmount = 0.5f;
 
 		builder.getWindow().setAttributes(lp);
-		builder.getWindow().addFlags(
-				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 
 		back.setOnClickListener(new OnClickListener() {
 
