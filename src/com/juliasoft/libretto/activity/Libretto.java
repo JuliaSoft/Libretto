@@ -65,7 +65,6 @@ public class Libretto extends ListActivity {
 	private static final int DIALOG_MESSAGE = 7;
 	private static final int SHOW_ACTIVITY = 8;
 
-	// private static final int EDIT_DIALOG = 8;
 	private static final String LIBRETTO_XML_FILE = "Libretto.xml";
 
 	private Hashtable<String, Esame> esami;
@@ -391,7 +390,7 @@ public class Libretto extends ListActivity {
 		new LibrettoTask().execute(page_HTML);
 	}
 
-	private void retriveData(String page_HTML) {
+	private void retrieveData(String page_HTML) {
 		if (page_HTML == null) {
 			return;
 		}
@@ -417,18 +416,16 @@ public class Libretto extends ListActivity {
 				esa.setVoto(tds.get(12).text());
 				esa.setRic(tds.get(14).text());
 				esa.setQ_val(tds.get(15).text());
-				if (pianoStudio.size() == 0) {
+				if (pianoStudio.isEmpty())
 					adapter.addItem(esa);
-				}
 				esami.put(esa.getEsame(), esa);
 			} catch (Exception e) {
 				Log.e(TAG, "Retrive data: " + e.getMessage());
 			}
 		}
 
-		if (pianoStudio.size() == 0) {
+		if (pianoStudio.isEmpty())
 			return;
-		}
 
 		for (String s : pianoStudio) {
 			if (s.contains("Anno")) {
@@ -611,8 +608,7 @@ public class Libretto extends ListActivity {
 
 	private double mediaAritmetica() {
 		double somma = 0;
-		for (Iterator<Esame> i = esami.values().iterator(); i.hasNext();) {
-			Esame e = i.next();
+		for (Esame e: esami.values()) {
 			if (e.getData_esame() == null || e.getData_esame().equals(""))
 				continue;
 			try {
@@ -624,6 +620,7 @@ public class Libretto extends ListActivity {
 				}
 			}
 		}
+
 		try {
 			return Utils.arrotonda(somma / numeroEsami(), 2);
 		} catch (Exception e) {
@@ -635,8 +632,7 @@ public class Libretto extends ListActivity {
 		int count = 0;
 		double somma = 0;
 		int crediti = 0;
-		for (Iterator<Esame> i = esami.values().iterator(); i.hasNext();) {
-			Esame e = i.next();
+		for (Esame e: esami.values()) {
 			try {
 				crediti = Integer.parseInt(e.getPeso_crediti());
 				somma += Integer.parseInt(e.getVoto()) * crediti;
@@ -659,8 +655,7 @@ public class Libretto extends ListActivity {
 		tot_esami_sost = 0;
 		tot_crediti_sost = 0;
 		int no_media = 0;
-		for (Iterator<Esame> i = esami.values().iterator(); i.hasNext();) {
-			Esame e = i.next();
+		for (Esame e: esami.values()) {
 			try {
 				Integer.parseInt(e.getVoto());
 				tot_esami_sost++;
@@ -728,25 +723,22 @@ public class Libretto extends ListActivity {
 		String voto = e.getVoto();
 		selected = 0;
 		for (int i = 18; i < 31; i++) {
-			String item = "" + i;
+			String item = String.valueOf(i);
 			adapter.add(item);
-			if (voto.equals(item)) {
+			if (voto.equals(item))
 				selected = i - 18;
-			}
 		}
 		sp_voto.setAdapter(adapter);
 		sp_voto.setSelection(selected);
 
-		Spinner sp_crediti = (Spinner) layout
-				.findViewById(R.id.sp_edit_crediti);
-		adapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item);
+		Spinner sp_crediti = (Spinner) layout.findViewById(R.id.sp_edit_crediti);
+		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
 		String crediti = e.getPeso_crediti();
 		selected = 0;
 		for (int i = 1; i < 31; i++) {
-			String item = "" + i;
+			String item = String.valueOf(i);
 			adapter.add(item);
 			if (crediti.equals(item)) {
 				selected = i - 1;
@@ -869,12 +861,12 @@ public class Libretto extends ListActivity {
 		protected Void doInBackground(String... params) {
 			if (params != null && params.length > 0) {
 				if (!loadXML())
-					retriveData(params[0]);
+					retrieveData(params[0]);
 			} else if (!Utils.isNetworkAvailable(Libretto.this)) {
 				cm.setLogged(false);
 				showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
 			} else
-				retriveData(cm.connection(ConnectionManager.ESSE3,
+				retrieveData(cm.connection(ConnectionManager.ESSE3,
 						Utils.TARGET_LIBRETTO));
 			return null;
 		}
