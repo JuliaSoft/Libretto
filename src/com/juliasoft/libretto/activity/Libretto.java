@@ -70,7 +70,6 @@ public class Libretto extends ListActivity {
 
 	private Set<Esame> esami;
 	private int tot_crediti_sost;
-	private int tot_esami_sost;
 	private int mMethod;
 	private int selected_item;
 	private ArrayList<String> pianoStudio = new ArrayList<String>();
@@ -96,11 +95,9 @@ public class Libretto extends ListActivity {
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item
-				.getMenuInfo();
-		if (adapter.getItemViewType(info.position) == SeparatedListAdapter.TYPE_SEPARATOR) {
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+		if (adapter.getItemViewType(info.position) == SeparatedListAdapter.TYPE_SEPARATOR)
 			return false;
-		}
 
 		switch (item.getItemId()) {
 		case CONTEXT_MENU_DELETE_ITEM:
@@ -602,23 +599,31 @@ public class Libretto extends ListActivity {
 		}
 	}
 
+	/**
+	 * @param numero
+	 * @param nCifreDecimali
+	 * @return
+	 */
+	private double arrotonda(double numero, int nCifreDecimali) {
+		return Math.round(numero * Math.pow(10, nCifreDecimali))
+				/ Math.pow(10, nCifreDecimali);
+	}
+
 	private double mediaAritmetica() {
 		double somma = 0;
-		for (Esame e: esami) {
+		for (Esame e: esami)
 			if (e.getData_esame() == null || e.getData_esame().equals(""))
 				continue;
-			try {
-
-				somma += Integer.parseInt(e.getVoto());
-			} catch (Exception ex) {
-				if (e.getVoto().equals("30L")) {
-					somma += 30;
+			else if (e.getVoto().equals("30L"))
+				somma += 30;
+			else
+				try {
+					somma += Integer.parseInt(e.getVoto());
 				}
-			}
-		}
+				catch (NumberFormatException ex) {}
 
 		try {
-			return Utils.arrotonda(somma / numeroEsami(), 2);
+			return arrotonda(somma / numeroEsami(), 2);
 		} catch (Exception e) {
 			return 0;
 		}
@@ -628,48 +633,48 @@ public class Libretto extends ListActivity {
 		int count = 0;
 		double somma = 0;
 		int crediti = 0;
-		for (Esame e: esami) {
-			try {
-				crediti = Integer.parseInt(e.getPeso_crediti());
-				somma += Integer.parseInt(e.getVoto()) * crediti;
+		for (Esame e: esami)
+			if (e.getVoto().equals("30L")) {
+				somma += 30 * crediti;
 				count += crediti;
-			} catch (Exception ex) {
-				if (e.getVoto().equals("30L")) {
-					somma += 30 * crediti;
-					count += crediti;
-				}
 			}
-		}
+			else
+				try {
+					crediti = Integer.parseInt(e.getPeso_crediti());
+					somma += Integer.parseInt(e.getVoto()) * crediti;
+					count += crediti;
+				} catch (NumberFormatException ex) {}
+
 		try {
-			return Utils.arrotonda(somma / count, 2);
+			return arrotonda(somma / count, 2);
 		} catch (Exception e) {
 			return 0;
 		}
 	}
 
 	private int numeroEsami() {
-		tot_esami_sost = 0;
+		int numeroEsamiSostenuti = 0;
 		tot_crediti_sost = 0;
 		int no_media = 0;
 		for (Esame e: esami) {
 			try {
 				Integer.parseInt(e.getVoto());
-				tot_esami_sost++;
+				numeroEsamiSostenuti++;
 				if (e.getData_esame() != null)
 					tot_crediti_sost += Integer.parseInt(e.getPeso_crediti());
 			} catch (Exception ex) {
 				if (e.getVoto().equals("30L")) {
-					tot_esami_sost++;
+					numeroEsamiSostenuti++;
 					tot_crediti_sost += Integer.parseInt(e.getPeso_crediti());
 				}
 				if (e.getVoto().equals("APPR") || e.getVoto().equals("IDO")) {
-					tot_esami_sost++;
+					numeroEsamiSostenuti++;
 					tot_crediti_sost += Integer.parseInt(e.getPeso_crediti());
 					no_media++;
 				}
 			}
 		}
-		return tot_esami_sost - no_media;
+		return numeroEsamiSostenuti - no_media;
 	}
 
 	/**

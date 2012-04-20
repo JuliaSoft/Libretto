@@ -222,16 +222,6 @@ public class Utils {
 		return colorstr;
 	}
 
-	/**
-	 * @param numero
-	 * @param nCifreDecimali
-	 * @return
-	 */
-	public static double arrotonda(double numero, int nCifreDecimali) {
-		return Math.round(numero * Math.pow(10, nCifreDecimali))
-				/ Math.pow(10, nCifreDecimali);
-	}
-
 	public static Bitmap downloadBitmap(String fileUrl) {
 		ConnectionManager cm = ConnectionManager.getInstance();
 		InputStream is = null;
