@@ -4,8 +4,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.TreeSet;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
@@ -67,7 +68,7 @@ public class Libretto extends ListActivity {
 
 	private static final String LIBRETTO_XML_FILE = "Libretto.xml";
 
-	private Hashtable<String, Esame> esami;
+	private Set<Esame> esami;
 	private int tot_crediti_sost;
 	private int tot_esami_sost;
 	private int mMethod;
@@ -85,11 +86,10 @@ public class Libretto extends ListActivity {
 	}
 
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v,
-			ContextMenu.ContextMenuInfo menuInfo) {
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 		Esame esame = (Esame) adapter.getItem(info.position);
-		menu.setHeaderTitle(esame.getEsame());
+		menu.setHeaderTitle(esame.getNome());
 		menu.add(Menu.NONE, CONTEXT_MENU_DELETE_ITEM, Menu.NONE, "Delete");
 		menu.add(Menu.NONE, CONTEXT_MENU_EDIT, Menu.NONE, "Edit");
 	}
@@ -105,7 +105,7 @@ public class Libretto extends ListActivity {
 		switch (item.getItemId()) {
 		case CONTEXT_MENU_DELETE_ITEM:
 			Esame esame = (Esame) adapter.getItem(info.position);
-			esami.remove(esame.getEsame());
+			esami.remove(esame);
 			adapter.removeItem(info.position);
 			return (true);
 		case CONTEXT_MENU_EDIT:
@@ -143,7 +143,7 @@ public class Libretto extends ListActivity {
 											.getSelectedItem().toString();
 									Esame e = (Esame) adapter
 											.getItem(selected_item);
-									e.setEsame(name);
+									e.setNome(name);
 									e.setData_esame(day + "/" + month + "/"
 											+ year);
 									e.setAa_freq(aaf);
@@ -182,7 +182,7 @@ public class Libretto extends ListActivity {
 		Intent myIntent = new Intent(Libretto.this, DettagliEsame.class);
 
 		String pkg = getPackageName();
-		myIntent.putExtra(pkg + ".esame", esame.getEsame());
+		myIntent.putExtra(pkg + ".esame", esame.getNome());
 		myIntent.putExtra(pkg + ".anno_corso", esame.getAnno_corso());
 		myIntent.putExtra(pkg + ".aa_freq", esame.getAa_freq());
 		myIntent.putExtra(pkg + ".peso_crediti", esame.getPeso_crediti());
@@ -223,11 +223,11 @@ public class Libretto extends ListActivity {
 		if (!anni.isEmpty()) {
 			for (Element anno : anni) {
 				Esame e = new Esame();
-				e.setEsame(anno.attr("nome"));
+				e.setNome(anno.attr("nome"));
 				adapter.addSeparatorItem(e);
 				for (Element esame : anno.select("esame")) {
 					e = new Esame();
-					e.setEsame(esame.attr("nome"));
+					e.setNome(esame.attr("nome"));
 					e.setAnno_corso(esame.attr("annocorso"));
 					e.setAa_freq(esame.attr("annofreq"));
 					e.setPeso_crediti(esame.attr("crediti"));
@@ -239,7 +239,7 @@ public class Libretto extends ListActivity {
 
 					adapter.addItem(e);
 
-					this.esami.put(e.getEsame(), e);
+					esami.add(e);
 				}
 			}
 
@@ -249,7 +249,7 @@ public class Libretto extends ListActivity {
 
 			for (Element esame : esami) {
 				Esame e = new Esame();
-				e.setEsame(esame.attr("nome"));
+				e.setNome(esame.attr("nome"));
 				e.setAnno_corso(esame.attr("annocorso"));
 				e.setAa_freq(esame.attr("annofreq"));
 				e.setPeso_crediti(esame.attr("crediti"));
@@ -259,7 +259,7 @@ public class Libretto extends ListActivity {
 				e.setQ_val(esame.attr("qval"));
 				e.setStato_gif(esame.attr("image"));
 				adapter.addItem(e);
-				this.esami.put(e.getEsame(), e);
+				this.esami.add(e);
 			}
 		}
 
@@ -272,8 +272,7 @@ public class Libretto extends ListActivity {
 		FileOutputStream fileos = Utils.createXMLFile(LIBRETTO_XML_FILE);
 
 		if (fileos == null) {
-			showMessage(EXPORT_XML_MESSAGE,
-					"Errore durante la creazione del file!");
+			showMessage(EXPORT_XML_MESSAGE, "Errore durante la creazione del file!");
 			return;
 		}
 		// we create a XmlSerializer in order to write xml data
@@ -296,7 +295,7 @@ public class Libretto extends ListActivity {
 				switch (adapter.getItemViewType(pos)) {
 				case SeparatedListAdapter.TYPE_ITEM:
 					serializer.startTag(null, "ESAME");
-					serializer.attribute(null, "nome", esame.getEsame());
+					serializer.attribute(null, "nome", esame.getNome());
 					serializer.attribute(null, "annocorso",
 							esame.getAnno_corso());
 					serializer.attribute(null, "annofreq", esame.getAa_freq());
@@ -314,7 +313,7 @@ public class Libretto extends ListActivity {
 						serializer.endTag(null, "ANNO");
 					}
 					serializer.startTag(null, "ANNO");
-					serializer.attribute(null, "nome", esame.getEsame());
+					serializer.attribute(null, "nome", esame.getNome());
 
 					break;
 				default:
@@ -362,9 +361,8 @@ public class Libretto extends ListActivity {
 
 		cm = ConnectionManager.getInstance();
 
-		adapter = new SeparatedListAdapter(Libretto.this,
-				R.layout.libretto_item);
-		esami = new Hashtable<String, Esame>();
+		adapter = new SeparatedListAdapter(Libretto.this, R.layout.libretto_item);
+		esami = new HashSet<Esame>();
 		pianoStudio = new ArrayList<String>();
 
 		builder = new AlertDialog.Builder(this).setTitle("Login")
@@ -406,7 +404,7 @@ public class Libretto extends ListActivity {
 			try {
 				String e = tds.get(2).text().split(" - ", 2)[1];
 
-				esa.setEsame(e);
+				esa.setNome(e);
 				esa.setAnno_corso(tds.get(1).text());
 				esa.setStato_gif(Esse3HttpClient.AUTH_URI
 						+ tds.get(8).select("img").first().attr("src"));
@@ -418,7 +416,7 @@ public class Libretto extends ListActivity {
 				esa.setQ_val(tds.get(15).text());
 				if (pianoStudio.isEmpty())
 					adapter.addItem(esa);
-				esami.put(esa.getEsame(), esa);
+				esami.add(esa);
 			} catch (Exception e) {
 				Log.e(TAG, "Retrive data: " + e.getMessage());
 			}
@@ -430,20 +428,20 @@ public class Libretto extends ListActivity {
 		for (String s : pianoStudio) {
 			if (s.contains("Anno")) {
 				Esame e = new Esame();
-				e.setEsame(s);
+				e.setNome(s);
 				adapter.addSeparatorItem(e);
 			} else
-				adapter.addItem(esami.get(s));
+				for (Esame e: esami)
+					if (e.getNome().equals(s))
+						adapter.addItem(e);
 		}
 
 		Esame e = new Esame();
-		e.setEsame("Attivit� formative a scelta dello studente");
+		e.setNome("Attività formative a scelta dello studente");
 		adapter.addSeparatorItem(e);
-		for (String s : esami.keySet()) {
-			if (!pianoStudio.contains(s)) {
-				adapter.addItem(esami.get(s));
-			}
-		}
+		for (Esame ee: esami)
+			if (!pianoStudio.contains(ee.getNome()))
+				adapter.addItem(ee);
 	}
 
 	private void setPianoStudio() {
@@ -451,12 +449,10 @@ public class Libretto extends ListActivity {
 			try {
 				String page_HTML = cm.connection(ConnectionManager.ESSE3,
 						Utils.TARGET_PIANO_STUDIO);
-				Elements tables = Utils.jsoupSelect(page_HTML,
-						"table.detail_table");
+				Elements tables = Utils.jsoupSelect(page_HTML, "table.detail_table");
 
 				for (int i = 0; i < tables.size() - 1; i++) {
-					pianoStudio.add("Attivit� Didattiche - Anno di Corso "
-							+ (i + 1));
+					pianoStudio.add("Attività didattiche - Anno di corso " + (i + 1));
 
 					Element table = tables.get(i);
 					Elements trs = table.select("tr");
@@ -598,7 +594,7 @@ public class Libretto extends ListActivity {
 
 				Esame e = (Esame) esami.get(position);
 				TextView vi = (TextView) row.findViewById(R.id.separator);
-				vi.setText(e.getEsame());
+				vi.setText(e.getNome());
 				break;
 			}
 
@@ -608,7 +604,7 @@ public class Libretto extends ListActivity {
 
 	private double mediaAritmetica() {
 		double somma = 0;
-		for (Esame e: esami.values()) {
+		for (Esame e: esami) {
 			if (e.getData_esame() == null || e.getData_esame().equals(""))
 				continue;
 			try {
@@ -632,7 +628,7 @@ public class Libretto extends ListActivity {
 		int count = 0;
 		double somma = 0;
 		int crediti = 0;
-		for (Esame e: esami.values()) {
+		for (Esame e: esami) {
 			try {
 				crediti = Integer.parseInt(e.getPeso_crediti());
 				somma += Integer.parseInt(e.getVoto()) * crediti;
@@ -655,7 +651,7 @@ public class Libretto extends ListActivity {
 		tot_esami_sost = 0;
 		tot_crediti_sost = 0;
 		int no_media = 0;
-		for (Esame e: esami.values()) {
+		for (Esame e: esami) {
 			try {
 				Integer.parseInt(e.getVoto());
 				tot_esami_sost++;
