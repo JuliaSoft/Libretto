@@ -29,7 +29,6 @@ import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -259,8 +258,8 @@ public class Libretto extends ListActivity {
 
 		private static final int TYPE_MAX_COUNT = TYPE_SEPARATOR + 1;
 
-		private TreeSet<Integer> mSeparatorsSet;
-		private ArrayList<Row> rows;
+		private final TreeSet<Integer> mSeparatorsSet;
+		private final ArrayList<Row> rows;
 
 		public SeparatedListAdapter(Context context, int textViewResourceId) {
 			super(context, textViewResourceId);
@@ -436,16 +435,10 @@ public class Libretto extends ListActivity {
 		return numeroEsamiSostenuti - no_media;
 	}
 
-	/**
-	 * 
-	 * @param menu
-	 * @return
-	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
-		MenuInflater mInflater = getMenuInflater();
-		mInflater.inflate(R.menu.lib_menu, menu);
+		getMenuInflater().inflate(R.menu.lib_menu, menu);
 		return true;
 	}
 

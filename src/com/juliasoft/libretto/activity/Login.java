@@ -75,18 +75,10 @@ public class Login extends Activity {
 	private void init() {
 		html_pages = new HashMap<String, String>();
 
-		// initGUI
 		initUserNameEditTextWithConstraints();
-
-		pword = (EditText) findViewById(R.id.password);
-		remeb = (CheckBox) findViewById(R.id.id_remember_up);
-
+		initPasswordEditText();
+		initRememberPassword();
 		makeLoginPasswordRequired();
-
-		uname.setText((CharSequence) loadCredentials(PREF_USERNAME));
-		pword.setText((CharSequence) loadCredentials(PREF_PASSWORD));
-		remeb.setChecked((Boolean) loadCredentials(PREF_REMEMBER));
-
 		setLinkToJuliaSrl();
 
 		builder = new AlertDialog.Builder(this).setTitle("Login")
@@ -109,8 +101,19 @@ public class Login extends Activity {
 		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 	}
 
+	private void initRememberPassword() {
+		remeb = (CheckBox) findViewById(R.id.id_remember_up);
+		remeb.setChecked((Boolean) loadCredentials(PREF_REMEMBER));
+	}
+
+	private void initPasswordEditText() {
+		pword = (EditText) findViewById(R.id.password);
+		pword.setText((CharSequence) loadCredentials(PREF_PASSWORD));
+	}
+
 	private void initUserNameEditTextWithConstraints() {
 		uname = (EditText) findViewById(R.id.username);
+		uname.setText((CharSequence) loadCredentials(PREF_USERNAME));
 		uname.addTextChangedListener(new TextWatcher() {
 
 			@Override
@@ -164,16 +167,15 @@ public class Login extends Activity {
 		if (!isOnline()) {
 			cm.setLogged(false);
 			showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
-			return;
 		}
-
-		try {
-			cm.authenticate();
-		} catch (ConnectException e) {
-			showMessage(CONNECTION_ERROR, e.getMessage());
-		} catch (LoginException e) {
-			showMessage(LOGIN_ERROR, e.getMessage());
-		}
+		else
+			try {
+				cm.authenticate();
+			} catch (ConnectException e) {
+				showMessage(CONNECTION_ERROR, e.getMessage());
+			} catch (LoginException e) {
+				showMessage(LOGIN_ERROR, e.getMessage());
+			}
 	}
 
 	private void showMessage(int type, String msg) {
@@ -193,14 +195,11 @@ public class Login extends Activity {
 
 	private Object loadCredentials(String key) {
 		SharedPreferences pref = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-		if (key.equals(PREF_REMEMBER)) {
-			return pref.getBoolean(key, false);
-		}
-		return pref.getString(key, "");
+		return key.equals(PREF_REMEMBER) ?
+			pref.getBoolean(key, false) : pref.getString(key, "");
 	}
 
 	private boolean initPage(String url) {
-
 		// Pagina libretto studente
 		String page_HTML = cm.connection(ConnectionManager.ESSE3, url);
 
@@ -221,14 +220,13 @@ public class Login extends Activity {
 
 		if (trs.isEmpty()) {
 			// OLD
-			page_HTML = cm.connection(ConnectionManager.SSOL,
-					Utils.TARGET_ISCRIZIONI_OLD);
+			page_HTML = cm.connection(ConnectionManager.SSOL, Utils.TARGET_ISCRIZIONI_OLD);
 			html_pages.put("ISCRIZ_OLD", page_HTML);
-
-		} else {
+		}
+		else
 			// NEW
 			html_pages.put("ISCRIZ", page_HTML);
-		}
+
 		return true;
 	}
 
@@ -237,8 +235,7 @@ public class Login extends Activity {
 		return page_HTML == null ? false : page_HTML.contains("Scegli carriera");
 	}
 
-	// visualizza un menu con le matricole dell'utente(triennale,
-	// specialistica...)
+	// visualizza un menu con le matricole dell'utente(triennale, specialistica...)
 	private void selectID(String page_HTML) {
 		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID);
 		Resources res = getResources();
@@ -252,15 +249,13 @@ public class Login extends Activity {
 			}
 		}
 
-		iconContextMenu
-				.setOnClickListener(new IDContextMenu.IconContextMenuOnClickListener() {
+		iconContextMenu.setOnClickListener(new IDContextMenu.IconContextMenuOnClickListener() {
 
-					@Override
-					public void onClick(final String url) {
-						new LoginTask().execute(url);
-					}
-
-				});
+			@Override
+			public void onClick(final String url) {
+				new LoginTask().execute(url);
+			}
+		});
 
 		loginHandler.sendEmptyMessage(SHOW_DIALOG);
 	}
@@ -323,7 +318,7 @@ public class Login extends Activity {
 
 	private class LoginTask extends AsyncTask<String, Void, Boolean> {
 
-		private ProgressDialog dialog;
+		private final ProgressDialog dialog;
 
 		public LoginTask() {
 			dialog = new ProgressDialog(Login.this);
@@ -343,26 +338,21 @@ public class Login extends Activity {
 
 		@Override
 		protected void onPostExecute(final Boolean success) {
-			if (dialog.isShowing()) {
+			if (dialog.isShowing())
 				dialog.dismiss();
-			}
-			if (success) {
+
+			if (success)
 				loginHandler.sendEmptyMessage(SUCCESS);
-			}
 		}
 
 		@Override
 		protected Boolean doInBackground(final String... params) {
-			if (params != null && params.length > 0) {
+			if (params != null && params.length > 0)
 				return initPage(params[0]);
-			} else if (!cm.isLogged()) {
+			else if (!cm.isLogged())
 				login();
-			}
-			if (cm.isLogged()) {
-				return initPage(Utils.TARGET_LIBRETTO);
-			} else {
-				return false;
-			}
+
+			return cm.isLogged() ? initPage(Utils.TARGET_LIBRETTO) : false;
 		}
 	}
 }
