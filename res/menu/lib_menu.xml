@@ -5,12 +5,6 @@
         android:id="@+id/mitem01"
         android:title="Statistiche"/>
     <item
-        android:id="@+id/mitem02"
-        android:title="Salva XML"/>
-    <item
-        android:id="@+id/mitem04"
-        android:title="Elimina XML"/>
-    <item
         android:id="@+id/mitem03"
         android:title="Aggiorna da server"/>
 

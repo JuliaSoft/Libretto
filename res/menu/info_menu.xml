@@ -2,15 +2,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/info_menu_edit"
-        android:title="Modifica"/>
-    <item
-        android:id="@+id/info_menu_export"
-        android:title="Salva XML"/>
-    <item
-        android:id="@+id/info_menu_clear"
-        android:title="Elimina XML"/>
-    <item
         android:id="@+id/info_menu_update"
         android:title="Aggiorna da server"/>
 

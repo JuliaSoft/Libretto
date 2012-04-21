@@ -1,21 +1,19 @@
 package com.juliasoft.libretto.activity;
 
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
 import com.juliasoft.libretto.utils.Esame;
+import com.juliasoft.libretto.utils.Row;
+import com.juliasoft.libretto.utils.Separator;
 import com.juliasoft.libretto.utils.Utils;
 
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.xmlpull.v1.XmlSerializer;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -29,8 +27,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.util.Xml;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,13 +34,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.DatePicker;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 public class Libretto extends ListActivity {
@@ -52,14 +44,8 @@ public class Libretto extends ListActivity {
 	public static final String TAG = Libretto.class.getName();
 
 	private static final int MENU_MEDIA = R.id.mitem01;
-	private static final int MENU_EXPORT_XML = R.id.mitem02;
 	private static final int MENU_UPDATE = R.id.mitem03;
-	private static final int MENU_CLEAR_XML = R.id.mitem04;
 	private static final int METHOD_DRAW_SELECTOR_ON_TOP = 0;
-	private static final int CONTEXT_MENU_DELETE_ITEM = 1;
-	private static final int CONTEXT_MENU_EDIT = 2;
-	private static final int EXPORT_XML_MESSAGE = 3;
-	private static final int CLEAR_XML_MESSAGE = 4;
 	private static final int CONNECTION_ERROR = 5;
 	private static final int LOGIN_ERROR = 6;
 	private static final int DIALOG_MESSAGE = 7;
@@ -70,7 +56,6 @@ public class Libretto extends ListActivity {
 	private Set<Esame> esami;
 	private int tot_crediti_sost;
 	private int mMethod;
-	private int selected_item;
 	private ArrayList<String> pianoStudio = new ArrayList<String>();
 
 	private SeparatedListAdapter adapter;
@@ -84,97 +69,16 @@ public class Libretto extends ListActivity {
 	}
 
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-		Esame esame = (Esame) adapter.getItem(info.position);
-		menu.setHeaderTitle(esame.getNome());
-		menu.add(Menu.NONE, CONTEXT_MENU_DELETE_ITEM, Menu.NONE, "Delete");
-		menu.add(Menu.NONE, CONTEXT_MENU_EDIT, Menu.NONE, "Edit");
-	}
-
-	@Override
-	public boolean onContextItemSelected(MenuItem item) {
-		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-		if (adapter.getItemViewType(info.position) == SeparatedListAdapter.TYPE_SEPARATOR)
-			return false;
-
-		switch (item.getItemId()) {
-		case CONTEXT_MENU_DELETE_ITEM:
-			Esame esame = (Esame) adapter.getItem(info.position);
-			esami.remove(esame);
-			adapter.removeItem(info.position);
-			return (true);
-		case CONTEXT_MENU_EDIT:
-			selected_item = info.position;
-			LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			final View layout = inflater.inflate(R.layout.dialog_edit_esame,
-					null);
-			setEditDialog(layout);
-			AlertDialog ad = new AlertDialog.Builder(this)
-					.setView(layout)
-					.setTitle("Edit")
-					.setIcon(R.drawable.edit)
-					.setPositiveButton("Ok",
-							new DialogInterface.OnClickListener() {
-
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-									String name = ((EditText) layout
-											.findViewById(R.id.et_edit_name))
-											.getText().toString();
-									DatePicker dp = (DatePicker) layout
-											.findViewById(R.id.dp_edit_date);
-									int day = dp.getDayOfMonth();
-									int month = dp.getMonth();
-									int year = dp.getYear();
-									String aaf = ((Spinner) layout
-											.findViewById(R.id.sp_edit_aaf))
-											.getSelectedItem().toString();
-									String voto = ((Spinner) layout
-											.findViewById(R.id.sp_edit_voto))
-											.getSelectedItem().toString();
-									String crediti = ((Spinner) layout
-											.findViewById(R.id.sp_edit_crediti))
-											.getSelectedItem().toString();
-									Esame e = (Esame) adapter
-											.getItem(selected_item);
-									e.setNome(name);
-									e.setData_esame(day + "/" + month + "/"
-											+ year);
-									e.setAa_freq(aaf);
-									e.setVoto(voto);
-									e.setPeso_crediti(crediti);
-
-									adapter.replaceItem(e, selected_item);
-									dialog.dismiss();
-								}
-
-							})
-					.setNegativeButton("Cancel",
-							new DialogInterface.OnClickListener() {
-
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-									dialog.dismiss();
-								}
-
-							}).create();
-			ad.show();
-			return (true);
-		}
-		return (super.onOptionsItemSelected(item));
-	}
-
-	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
-
-		if (adapter.getItemViewType(position) == SeparatedListAdapter.TYPE_SEPARATOR) {
+		if (adapter.getItemViewType(position) == SeparatedListAdapter.TYPE_SEPARATOR)
 			return;
-		}
 
-		final Esame esame = (Esame) adapter.getItem(position);
+		Row row = adapter.getItem(position);
+		if (!(row instanceof Esame))
+			return;
+
+		Esame esame = (Esame) row;
+
 		Intent myIntent = new Intent(Libretto.this, DettagliEsame.class);
 
 		String pkg = getPackageName();
@@ -218,11 +122,9 @@ public class Libretto extends ListActivity {
 
 		if (!anni.isEmpty()) {
 			for (Element anno : anni) {
-				Esame e = new Esame();
-				e.setNome(anno.attr("nome"));
-				adapter.addSeparatorItem(e);
+				adapter.addSeparatorItem(new Separator(anno.attr("nome")));
 				for (Element esame : anno.select("esame")) {
-					e = new Esame(esame);
+					Esame e = new Esame(esame);
 					adapter.addItem(e);
 					esami.add(e);
 				}
@@ -238,80 +140,6 @@ public class Libretto extends ListActivity {
 
 		Log.i(TAG, "Load XML completato");
 		return true;
-	}
-
-	private void exportToXML() {
-
-		FileOutputStream fileos = Utils.createXMLFile(LIBRETTO_XML_FILE);
-
-		if (fileos == null) {
-			showMessage(EXPORT_XML_MESSAGE, "Errore durante la creazione del file!");
-			return;
-		}
-		// we create a XmlSerializer in order to write xml data
-		XmlSerializer serializer = Xml.newSerializer();
-		try {
-			// we set the FileOutputStream as output for the serializer, using
-			// UTF-8 encoding
-			serializer.setOutput(fileos, "UTF-8");
-			// Write <?xml declaration with encoding (if encoding not null) and
-			// standalone flag (if standalone not null)
-			serializer.startDocument(null, Boolean.valueOf(true));
-			// set indentation option
-			serializer.setFeature(
-					"http://xmlpull.org/v1/doc/features.html#indent-output",
-					true);
-			serializer.startTag(null, "LIBRETTO");
-
-			int pos = 0;
-			for (Esame esame : adapter.esami) {
-				switch (adapter.getItemViewType(pos)) {
-				case SeparatedListAdapter.TYPE_ITEM:
-					serializer.startTag(null, "ESAME");
-					serializer.attribute(null, "nome", esame.getNome());
-					serializer.attribute(null, "annocorso",
-							esame.getAnno_corso());
-					serializer.attribute(null, "annofreq", esame.getAa_freq());
-					serializer.attribute(null, "crediti",
-							esame.getPeso_crediti());
-					serializer.attribute(null, "data", esame.getData_esame());
-					serializer.attribute(null, "voto", esame.getVoto());
-					serializer.attribute(null, "ric", esame.getRic());
-					serializer.attribute(null, "qval", esame.getQ_val());
-					serializer.attribute(null, "image", esame.getStato_gif());
-					serializer.endTag(null, "ESAME");
-					break;
-				case SeparatedListAdapter.TYPE_SEPARATOR:
-					if (serializer.getName().equals("ANNO")) {
-						serializer.endTag(null, "ANNO");
-					}
-					serializer.startTag(null, "ANNO");
-					serializer.attribute(null, "nome", esame.getNome());
-
-					break;
-				default:
-					break;
-				}
-				pos++;
-			}
-			if (serializer.getName().equals("ANNO")) {
-				serializer.endTag(null, "ANNO");
-			}
-
-			serializer.endTag(null, "LIBRETTO");
-			serializer.endDocument();
-			// write xml data into the FileOutputStream
-			serializer.flush();
-			// finally we close the file stream
-			fileos.close();
-			showMessage(EXPORT_XML_MESSAGE,
-					"Esportazione riuscita con successo!");
-		} catch (Exception e) {
-			showMessage(EXPORT_XML_MESSAGE,
-					"Errore durante il popolamento del file xml!");
-			Log.e(TAG, "Exception error occurred while creating xml file");
-			e.printStackTrace();
-		}
 	}
 
 	private void showMessage(int type, String msg) {
@@ -384,19 +212,15 @@ public class Libretto extends ListActivity {
 			return;
 
 		for (String s : pianoStudio) {
-			if (s.contains("Anno")) {
-				Esame e = new Esame();
-				e.setNome(s);
-				adapter.addSeparatorItem(e);
-			} else
+			if (s.contains("Anno"))
+				adapter.addSeparatorItem(new Separator(s));
+			else
 				for (Esame e: esami)
 					if (e.getNome().equals(s))
 						adapter.addItem(e);
 		}
 
-		Esame e = new Esame();
-		e.setNome("Attività formative a scelta dello studente");
-		adapter.addSeparatorItem(e);
+		adapter.addSeparatorItem(new Separator("Attività formative a scelta dello studente"));
 		for (Esame ee: esami)
 			if (!pianoStudio.contains(ee.getNome()))
 				adapter.addItem(ee);
@@ -416,8 +240,7 @@ public class Libretto extends ListActivity {
 					Elements trs = table.select("tr");
 					for (Element tr : trs) {
 						try {
-							Element td = tr.select("td").get(1);
-							pianoStudio.add(td.text());
+							pianoStudio.add(tr.select("td").get(1).text());
 						} catch (Exception e) {
 							// TODO: handle exception
 						}
@@ -429,7 +252,7 @@ public class Libretto extends ListActivity {
 		}
 	}
 
-	private class SeparatedListAdapter extends ArrayAdapter<Object> {
+	private class SeparatedListAdapter extends ArrayAdapter<Row> {
 
 		public static final int TYPE_ITEM = 0;
 		public static final int TYPE_SEPARATOR = 1;
@@ -437,30 +260,29 @@ public class Libretto extends ListActivity {
 		private static final int TYPE_MAX_COUNT = TYPE_SEPARATOR + 1;
 
 		private TreeSet<Integer> mSeparatorsSet;
-		private ArrayList<Esame> esami;
+		private ArrayList<Row> rows;
 
 		public SeparatedListAdapter(Context context, int textViewResourceId) {
-			// TODO Auto-generated constructor stub
 			super(context, textViewResourceId);
-			esami = new ArrayList<Esame>();
+			rows = new ArrayList<Row>();
 			mSeparatorsSet = new TreeSet<Integer>();
 		}
 
 		public void reset() {
-			esami.clear();
+			rows.clear();
 			mSeparatorsSet.clear();
 			notifyDataSetChanged();
 		}
 
-		public void addItem(Esame esame) {
-			esami.add(esame);
+		public void addItem(Row esame) {
+			rows.add(esame);
 			notifyDataSetChanged();
 		}
 
-		public void addSeparatorItem(Esame esame) {
-			addItem(esame);
+		public void addSeparatorItem(Separator separator) {
+			addItem(separator);
 			// save separator position
-			mSeparatorsSet.add(esami.size() - 1);
+			mSeparatorsSet.add(rows.size() - 1);
 		}
 
 		@Override
@@ -470,40 +292,17 @@ public class Libretto extends ListActivity {
 
 		@Override
 		public int getCount() {
-			return esami.size();
+			return rows.size();
 		}
 
 		@Override
-		public Object getItem(int position) {
-			return esami.get(position);
+		public Row getItem(int position) {
+			return rows.get(position);
 		}
 
 		@Override
 		public long getItemId(int position) {
 			return position;
-		}
-
-		public void removeItem(int position) {
-			esami.remove(position);
-			ArrayList<Integer> toRemove = new ArrayList<Integer>();
-			ArrayList<Integer> toAdd = new ArrayList<Integer>();
-			Iterator<Integer> iter = mSeparatorsSet.iterator();
-			while (iter.hasNext()) {
-				int pos = iter.next();
-				if (pos > position) {
-					toRemove.add(pos);
-					toAdd.add(pos - 1);
-				}
-			}
-			mSeparatorsSet.removeAll(toRemove);
-			mSeparatorsSet.addAll(toAdd);
-
-			notifyDataSetChanged();
-		}
-
-		public void replaceItem(Esame esame, int position) {
-			esami.set(position, esame);
-			notifyDataSetChanged();
 		}
 
 		@Override
@@ -533,7 +332,7 @@ public class Libretto extends ListActivity {
 			switch (type) {
 			case TYPE_ITEM:
 
-				final Esame esame = (Esame) esami.get(position);
+				Esame esame = (Esame) rows.get(position);
 
 				ImageView v = (ImageView) row.findViewById(R.id.bar);
 				TextView label = (TextView) row.findViewById(R.id.esame);
@@ -549,7 +348,7 @@ public class Libretto extends ListActivity {
 				break;
 			case TYPE_SEPARATOR:
 
-				Esame e = (Esame) esami.get(position);
+				Esame e = (Esame) rows.get(position);
 				TextView vi = (TextView) row.findViewById(R.id.separator);
 				vi.setText(e.getNome());
 				break;
@@ -650,81 +449,6 @@ public class Libretto extends ListActivity {
 		return true;
 	}
 
-	private void setEditDialog(View layout) {
-		Esame e = (Esame) adapter.getItem(selected_item);
-
-		EditText et = (EditText) layout.findViewById(R.id.et_edit_name);
-		et.setText(e.toString());
-
-		Spinner sp_aaf = (Spinner) layout.findViewById(R.id.sp_edit_aaf);
-		Calendar c = Calendar.getInstance();
-		int year = c.get(Calendar.YEAR);
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		String aaf = e.getAa_freq();
-		int selected = 0;
-		for (int i = 0; i < 10; i++) {
-			String item = (year - 1) + "/" + year;
-			if (item.equals(aaf)) {
-				selected = i;
-				System.out.println("pos: " + selected + " -- " + item);
-			}
-			adapter.add(item);
-			year--;
-		}
-		sp_aaf.setAdapter(adapter);
-		sp_aaf.setSelection(selected);
-
-		Spinner sp_voto = (Spinner) layout.findViewById(R.id.sp_edit_voto);
-		adapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-		String voto = e.getVoto();
-		selected = 0;
-		for (int i = 18; i < 31; i++) {
-			String item = String.valueOf(i);
-			adapter.add(item);
-			if (voto.equals(item))
-				selected = i - 18;
-		}
-		sp_voto.setAdapter(adapter);
-		sp_voto.setSelection(selected);
-
-		Spinner sp_crediti = (Spinner) layout.findViewById(R.id.sp_edit_crediti);
-		adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-		String crediti = e.getPeso_crediti();
-		selected = 0;
-		for (int i = 1; i < 31; i++) {
-			String item = String.valueOf(i);
-			adapter.add(item);
-			if (crediti.equals(item)) {
-				selected = i - 1;
-				System.out.println("pos: " + selected + " -- " + item);
-			}
-		}
-		sp_crediti.setAdapter(adapter);
-		sp_crediti.setSelection(selected);
-
-		DatePicker dp = (DatePicker) layout.findViewById(R.id.dp_edit_date);
-		String dmy[] = e.getData_esame().split("/");
-		int day = 0;
-		int month = 0;
-		if (dmy.length == 3) {
-			try {
-				day = Integer.parseInt(dmy[0]);
-				month = Integer.parseInt(dmy[1]);
-				year = Integer.parseInt(dmy[2]);
-				dp.init(year, month, day, null);
-			} catch (Exception ex) {
-				// TODO: handle exception
-			}
-		}
-	}
-
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
@@ -750,14 +474,6 @@ public class Libretto extends ListActivity {
 		case MENU_UPDATE:
 			new LibrettoTask().execute();
 			return true;
-		case MENU_EXPORT_XML:
-			exportToXML();
-			return true;
-		case MENU_CLEAR_XML:
-			boolean success = Utils.deleteFile(LIBRETTO_XML_FILE);
-			if (success)
-				showMessage(CLEAR_XML_MESSAGE, "Dati cancellati.");
-			return success;
 		default:
 			return false;
 		}
@@ -773,17 +489,13 @@ public class Libretto extends ListActivity {
 				Intent intent = new Intent(getApplicationContext(), Medie.class);
 				String pkg = getPackageName();
 
-				intent.putExtra(pkg + ".aritm",
-						String.valueOf(mediaAritmetica()));
+				intent.putExtra(pkg + ".aritm", String.valueOf(mediaAritmetica()));
 				intent.putExtra(pkg + ".pond", String.valueOf(mediaPonderata()));
 				intent.putExtra(pkg + ".num", String.valueOf(numeroEsami()));
-				intent.putExtra(pkg + ".crediti",
-						String.valueOf(tot_crediti_sost));
+				intent.putExtra(pkg + ".crediti", String.valueOf(tot_crediti_sost));
 
 				startActivity(intent);
 				break;
-			case EXPORT_XML_MESSAGE:
-			case CLEAR_XML_MESSAGE:
 			case CONNECTION_ERROR:
 			case LOGIN_ERROR:
 				showDialog(DIALOG_MESSAGE);
@@ -811,9 +523,8 @@ public class Libretto extends ListActivity {
 
 		@Override
 		protected void onPostExecute(Void success) {
-			if (dialog.isShowing()) {
+			if (dialog.isShowing())
 				dialog.dismiss();
-			}
 			setListAdapter(adapter);
 			registerForContextMenu(getListView());
 		}
@@ -827,8 +538,7 @@ public class Libretto extends ListActivity {
 				cm.setLogged(false);
 				showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
 			} else
-				retrieveData(cm.connection(ConnectionManager.ESSE3,
-						Utils.TARGET_LIBRETTO));
+				retrieveData(cm.connection(ConnectionManager.ESSE3, Utils.TARGET_LIBRETTO));
 			return null;
 		}
 	}
