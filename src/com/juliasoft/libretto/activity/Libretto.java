@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.connection.Esse3HttpClient;
 import com.juliasoft.libretto.utils.Esame;
 import com.juliasoft.libretto.utils.Utils;
 
@@ -223,40 +222,17 @@ public class Libretto extends ListActivity {
 				e.setNome(anno.attr("nome"));
 				adapter.addSeparatorItem(e);
 				for (Element esame : anno.select("esame")) {
-					e = new Esame();
-					e.setNome(esame.attr("nome"));
-					e.setAnno_corso(esame.attr("annocorso"));
-					e.setAa_freq(esame.attr("annofreq"));
-					e.setPeso_crediti(esame.attr("crediti"));
-					e.setData_esame(esame.attr("data"));
-					e.setVoto(esame.attr("voto"));
-					e.setRic(esame.attr("ric"));
-					e.setQ_val(esame.attr("qval"));
-					e.setStato_gif(esame.attr("image"));
-
+					e = new Esame(esame);
 					adapter.addItem(e);
-
 					esami.add(e);
 				}
 			}
 
 		} else {
-
-			Elements esami = Utils.jsoupSelect(xml, "libretto>esame");
-
-			for (Element esame : esami) {
-				Esame e = new Esame();
-				e.setNome(esame.attr("nome"));
-				e.setAnno_corso(esame.attr("annocorso"));
-				e.setAa_freq(esame.attr("annofreq"));
-				e.setPeso_crediti(esame.attr("crediti"));
-				e.setData_esame(esame.attr("data"));
-				e.setVoto(esame.attr("voto"));
-				e.setRic(esame.attr("ric"));
-				e.setQ_val(esame.attr("qval"));
-				e.setStato_gif(esame.attr("image"));
+			for (Element esame : Utils.jsoupSelect(xml, "libretto>esame")) {
+				Esame e = new Esame(esame);
 				adapter.addItem(e);
-				this.esami.add(e);
+				esami.add(e);
 			}
 		}
 
@@ -377,8 +353,7 @@ public class Libretto extends ListActivity {
 		lp.dimAmount = 0.5f;
 
 		builder.getWindow().setAttributes(lp);
-		builder.getWindow().addFlags(
-				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 
 		changeMethod(METHOD_DRAW_SELECTOR_ON_TOP);
 
@@ -386,9 +361,8 @@ public class Libretto extends ListActivity {
 	}
 
 	private void retrieveData(String page_HTML) {
-		if (page_HTML == null) {
+		if (page_HTML == null)
 			return;
-		}
 
 		setPianoStudio();
 
@@ -396,26 +370,13 @@ public class Libretto extends ListActivity {
 				.select("tr:not(:has(th))");
 
 		for (Element tr : trs) {
-			Esame esa = new Esame();
-			Elements tds = tr.children();
 			try {
-				String e = tds.get(2).text().split(" - ", 2)[1];
-
-				esa.setNome(e);
-				esa.setAnno_corso(tds.get(1).text());
-				esa.setStato_gif(Esse3HttpClient.AUTH_URI
-						+ tds.get(8).select("img").first().attr("src"));
-				esa.setAa_freq(tds.get(9).text());
-				esa.setPeso_crediti(tds.get(10).text());
-				esa.setData_esame(tds.get(11).text());
-				esa.setVoto(tds.get(12).text());
-				esa.setRic(tds.get(14).text());
-				esa.setQ_val(tds.get(15).text());
+				Esame esa = new Esame(tr.children());
 				if (pianoStudio.isEmpty())
 					adapter.addItem(esa);
 				esami.add(esa);
 			} catch (Exception e) {
-				Log.e(TAG, "Retrive data: " + e.getMessage());
+				Log.e(TAG, "Retrieve data: " + e.getMessage());
 			}
 		}
 
@@ -547,8 +508,7 @@ public class Libretto extends ListActivity {
 
 		@Override
 		public int getItemViewType(int position) {
-			return mSeparatorsSet.contains(position) ? TYPE_SEPARATOR
-					: TYPE_ITEM;
+			return mSeparatorsSet.contains(position) ? TYPE_SEPARATOR : TYPE_ITEM;
 		}
 
 		@Override
