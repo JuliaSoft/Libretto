@@ -29,6 +29,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -36,6 +37,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 
 public class Login extends Activity implements OnClickListener {
 
@@ -88,6 +90,8 @@ public class Login extends Activity implements OnClickListener {
 		pword.setText((CharSequence) loadCredentials(PREF_PASSWORD));
 		remeb.setChecked((Boolean) loadCredentials(PREF_REMEMBER));
 
+		setLinkToJuliaSrl();
+
 		builder = new AlertDialog.Builder(this).setTitle("Login")
 				.setIcon(android.R.drawable.ic_dialog_alert).create();
 		builder.setButton("OK", new DialogInterface.OnClickListener() {
@@ -107,6 +111,11 @@ public class Login extends Activity implements OnClickListener {
 		builder.getWindow().setAttributes(lp);
 		builder.getWindow().addFlags(
 				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+	}
+
+	private void setLinkToJuliaSrl() {
+		TextView disclaimer = (TextView) findViewById(R.id.textView3);
+		Linkify.addLinks(disclaimer, Linkify.ALL);
 	}
 
 	private boolean isOnline() {
