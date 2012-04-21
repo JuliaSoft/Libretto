@@ -39,7 +39,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 
-public class Login extends Activity implements OnClickListener {
+public class Login extends Activity {
 
 	private static final int SUCCESS = 0;
 	private static final int CONNECTION_ERROR = 1;
@@ -60,7 +60,6 @@ public class Login extends Activity implements OnClickListener {
 	private EditText uname;
 	private EditText pword;
 	private CheckBox remeb;
-	private Button login_B;
 	private IDContextMenu iconContextMenu;
 	private AlertDialog builder;
 	private String username;
@@ -74,17 +73,15 @@ public class Login extends Activity implements OnClickListener {
 	}
 
 	private void init() {
-
 		html_pages = new HashMap<String, String>();
 
 		// initGUI
-		uname = (EditText) findViewById(R.id.username);
-		uname.addTextChangedListener(new InputValidator(uname));
+		initUserNameEditTextWithConstraints();
+
 		pword = (EditText) findViewById(R.id.password);
 		remeb = (CheckBox) findViewById(R.id.id_remember_up);
 
-		login_B = (Button) findViewById(R.id.login);
-		login_B.setOnClickListener(this);
+		makeLoginPasswordRequired();
 
 		uname.setText((CharSequence) loadCredentials(PREF_USERNAME));
 		pword.setText((CharSequence) loadCredentials(PREF_PASSWORD));
@@ -109,8 +106,43 @@ public class Login extends Activity implements OnClickListener {
 		lp.dimAmount = 0.5f;
 
 		builder.getWindow().setAttributes(lp);
-		builder.getWindow().addFlags(
-				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+	}
+
+	private void initUserNameEditTextWithConstraints() {
+		uname = (EditText) findViewById(R.id.username);
+		uname.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void afterTextChanged(Editable s) {
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				if (s.length() != 0 && !Pattern.matches("^[a-z0-9]+$", s))
+					uname.setError("Oops! Prefisso 'id', caratteri accettati a-z e 0-9");
+			}
+		});
+	}
+
+	private void makeLoginPasswordRequired() {
+		Button login_B = (Button) findViewById(R.id.login);
+		login_B.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				if (uname.getText().length() == 0)
+					uname.setError("Required");
+				else if (pword.getText().length() == 0)
+					pword.setError("Required");
+				else
+					new LoginTask().execute();
+			}
+		});
 	}
 
 	private void setLinkToJuliaSrl() {
@@ -150,15 +182,13 @@ public class Login extends Activity implements OnClickListener {
 	}
 
 	private void saveCredentials(boolean value) {
-		if (value) {
+		if (value)
 			getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
 					.putString(PREF_USERNAME, username)
 					.putString(PREF_PASSWORD, password)
 					.putBoolean(PREF_REMEMBER, true).commit();
-		} else {
-			getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().clear()
-					.commit();
-		}
+		else
+			getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().clear().commit();
 	}
 
 	private Object loadCredentials(String key) {
@@ -204,9 +234,7 @@ public class Login extends Activity implements OnClickListener {
 
 	// ritorna true se l'utente deve scegliere tra pi� matricole
 	private boolean isMultiID(String page_HTML) {
-		if (page_HTML == null)
-			return false;
-		return page_HTML.contains("Scegli carriera");
+		return page_HTML == null ? false : page_HTML.contains("Scegli carriera");
 	}
 
 	// visualizza un menu con le matricole dell'utente(triennale,
@@ -215,9 +243,7 @@ public class Login extends Activity implements OnClickListener {
 		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID);
 		Resources res = getResources();
 
-		Elements trs = Utils.jsoupSelect(page_HTML, "table.detail_table")
-				.select("tr");
-		for (Element tr : trs) {
+		for (Element tr : Utils.jsoupSelect(page_HTML, "table.detail_table").select("tr")) {
 			Element a = tr.select("td.detail_table>a.detail_table").first();
 			if (a != null) {
 				String id = a.text();
@@ -255,8 +281,7 @@ public class Login extends Activity implements OnClickListener {
 				if (html_pages.containsKey("ISCRIZ"))
 					intent.putExtra(pkg + ".iscriz", html_pages.get("ISCRIZ"));
 				else if (html_pages.containsKey("ISCRIZ_OLD"))
-					intent.putExtra(pkg + ".iscriz_old",
-							html_pages.get("ISCRIZ_OLD"));
+					intent.putExtra(pkg + ".iscriz_old", html_pages.get("ISCRIZ_OLD"));
 				startActivity(intent);
 				break;
 			case CONNECTION_ERROR:
@@ -292,56 +317,7 @@ public class Login extends Activity implements OnClickListener {
 		if (cm != null) {
 			cm.reset();
 			html_pages.clear();
-			Log.i("INFO", "Reset CllientManager!");
-		}
-	}
-
-	@Override
-	public void onClick(View v) {
-		if (v == login_B) {
-			if (uname.getText().length() == 0) {
-				uname.setError("Required");
-				return;
-			}
-			if (pword.getText().length() == 0) {
-				pword.setError("Required");
-				return;
-			}
-			new LoginTask().execute();
-		}
-	}
-
-	private class InputValidator implements TextWatcher {
-		private EditText et;
-
-		private InputValidator(EditText editText) {
-			this.et = editText;
-		}
-
-		@Override
-		public void afterTextChanged(Editable s) {
-
-		}
-
-		@Override
-		public void beforeTextChanged(CharSequence s, int start, int count,
-				int after) {
-
-		}
-
-		@Override
-		public void onTextChanged(CharSequence s, int start, int before,
-				int count) {
-			if (s.length() != 0) {
-				switch (et.getId()) {
-				case R.id.username:
-					if (!Pattern.matches("^[a-z0-9]+$", s)) {
-						et.setError("Oops! Prefisso 'id', caratteri accettati a-z e 0-9");
-					}
-
-					break;
-				}
-			}
+			Log.i("INFO", "Reset ClientManager!");
 		}
 	}
 
