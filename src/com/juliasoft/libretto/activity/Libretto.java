@@ -234,9 +234,10 @@ public class Libretto extends ListActivity {
 		}
 
 		public void addSeparatorItem(Separator separator) {
-			addItem(separator);
+			rows.add(separator);
 			// save separator position
 			mSeparatorsSet.add(rows.size() - 1);
+			notifyDataSetChanged();
 		}
 
 		@Override
@@ -297,9 +298,9 @@ public class Libretto extends ListActivity {
 				break;
 			}
 			case TYPE_SEPARATOR: {
-				Esame esame = (Esame) rows.get(position);
+				Separator separator = (Separator) rows.get(position);
 				TextView vi = (TextView) row.findViewById(R.id.separator);
-				vi.setText(esame.getNome());
+				vi.setText(separator.getNome());
 				break;
 			}
 			}
