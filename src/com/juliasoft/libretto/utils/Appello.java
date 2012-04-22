@@ -6,8 +6,6 @@ import org.jsoup.select.Elements;
 import com.juliasoft.libretto.connection.SsolHttpClient;
 
 public class Appello {
-	// TODO
-	private final String esame = null;
 	private final String data;
 	private final String ora;
 	private final String tipo;
@@ -66,10 +64,6 @@ public class Appello {
 
 	public String getDocenti() {
 		return docenti;
-	}
-
-	public String getEsame() {
-		return esame;
 	}
 
 	public String getLink() {

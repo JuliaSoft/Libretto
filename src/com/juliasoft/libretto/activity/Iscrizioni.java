@@ -180,27 +180,6 @@ public class Iscrizioni extends ExpandableListActivity {
 			this.childData = children;
 		}
 
-		/**
-		 * A general add method, that allows you to add a appello to this list
-		 * 
-		 * Depending on if the category opf the appello is present or not, the
-		 * corresponding item will either be added to an existing group if it
-		 * exists, else the group will be created and then the item will be
-		 * added
-		 * 
-		 * @param appello
-		 */
-		public void addItem(Appello appello) {
-			if (!groupData.contains(appello.getEsame())) {
-				groupData.add(appello.getEsame());
-			}
-			int index = groupData.indexOf(appello.getEsame());
-			if (childData.size() < index + 1) {
-				childData.add(new ArrayList<Object>());
-			}
-			childData.get(index).add(appello);
-		}
-
 		@Override
 		public Object getChild(int groupPosition, int childPosition) {
 			return childData.get(groupPosition).get(childPosition);
