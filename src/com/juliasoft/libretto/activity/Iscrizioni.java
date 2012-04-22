@@ -75,8 +75,7 @@ public class Iscrizioni extends ExpandableListActivity {
 		Intent intent = getIntent();
 		String pkg = getPackageName();
 		String page_HTML = intent.getStringExtra(pkg + ".iscriz");
-		type = "" + intent.getStringExtra(pkg + ".type");
-
+		type = intent.getStringExtra(pkg + ".type");
 		cm = ConnectionManager.getInstance();
 		groupData = new ArrayList<String>();
 		childData = new ArrayList<List<Object>>();
@@ -90,72 +89,19 @@ public class Iscrizioni extends ExpandableListActivity {
 		if (page_HTML == null)
 			return;
 
-		if (type.equals("OLD")) {
+		if ("OLD".equals(type)) {
 			String esame = Utils
-					.jsoupSelect(page_HTML,
-							"select.TopTabText[name=id_insegn]>option[selected=selected]")
-					.text();
+				.jsoupSelect(page_HTML, "select.TopTabText[name=id_insegn]>option[selected=selected]").text();
 			groupData.add(esame.toUpperCase());
 			List<Object> children = new ArrayList<Object>();
 			childData.add(children);
 
 			page_HTML = Utils.removeSpecialString(page_HTML, "&nbsp;");
 
-			// mi ricavo tutti gli appelli dell'esame
-			Elements fss = Utils.jsoupSelect(page_HTML, "fieldset");
-
 			// ciclo degli appelli per l'esame
-			for (Element fs : fss) {
-				Appello app = new Appello();
-				children.add(app);
-				String docenti = "-";
-				String test = fs.select("p").text();
-				String split[] = test
-						.replace("Verbalizzante", ":Verbalizzante").split(":");
-				if (split.length > 1) {
-					docenti = "<b>" + split[0] + ": </b>" + split[1];
-					if (split.length > 3)
-						docenti += "<br><b>" + split[2] + ": </b>" + split[3];
-				}
+			for (Element fs : Utils.jsoupSelect(page_HTML, "fieldset"))
+				children.add(new Appello(fs));
 
-				// informazioni dell'appello
-				app.setDocenti(docenti);
-
-				Elements tds = fs.select("td.Content_Chiaro");
-				Elements input = tds.get(4).children();
-				tds.remove(4);
-				String tipo = "", modulo = "", data = "", ora = "";
-
-				for (int i = 0; i < tds.size(); i += 4) {
-
-					if (tds.get(i).text().equals("Solo verbalizzazione")) {
-						tipo += "Verb." + "\n";
-					} else {
-						tipo += tds.get(i).text() + "\n";
-					}
-					modulo += tds.get(i + 1).text() + "\n";
-					data += tds.get(i + 2).text() + "\n";
-					ora += tds.get(i + 3).text() + "\n";
-				}
-
-				app.setTipo(tipo);
-				app.setModulo(modulo);
-				app.setData(data);
-				app.setOra(ora);
-
-				String link = "";
-				if (input.hasAttr("onclick")) {
-					link = SsolHttpClient.AUTH_URI
-							+ input.attr("onclick").split("'")[1];
-				}
-
-				// link per effettuare l'iscrizione
-				if (Utils.isLink(link)) {
-					app.setLink(link);
-				} else {
-					app.setLink(input.text());
-				}
-			}
 			return;
 		}
 
@@ -192,62 +138,9 @@ public class Iscrizioni extends ExpandableListActivity {
 
 				page_HTML = Utils.removeSpecialString(page_HTML, "&nbsp;");
 
-				// mi ricavo tutti gli appelli dell'esame
-				Elements fss = Utils.jsoupSelect(page_HTML, "fieldset");
-
 				// ciclo degli appelli per l'esame
-				for (Element fs : fss) {
-					Appello app = new Appello();
-					children.add(app);
-					String docenti = "-";
-					String test = fs.select("p").text();
-					String split[] = test.replace("Verbalizzante",
-							":Verbalizzante").split(":");
-					if (split.length > 1) {
-						docenti = "<b>" + split[0] + ": </b>" + split[1];
-						if (split.length > 3)
-							docenti += "<br><b>" + split[2] + ": </b>"
-									+ split[3];
-					}
-
-					// informazioni dell'appello
-					app.setDocenti(docenti);
-
-					tds = fs.select("td.Content_Chiaro");
-					input = tds.get(4).children();
-					tds.remove(4);
-					String tipo = "", modulo = "", data = "", ora = "";
-
-					for (int i = 0; i < tds.size(); i += 4) {
-
-						if (tds.get(i).text().equals("Solo verbalizzazione")) {
-							tipo += "Verb." + "\n";
-						} else {
-							tipo += tds.get(i).text() + "\n";
-						}
-						modulo += tds.get(i + 1).text() + "\n";
-						data += tds.get(i + 2).text() + "\n";
-						ora += tds.get(i + 3).text() + "\n";
-					}
-
-					app.setTipo(tipo);
-					app.setModulo(modulo);
-					app.setData(data);
-					app.setOra(ora);
-
-					link = "";
-					if (input.hasAttr("onclick")) {
-						link = SsolHttpClient.AUTH_URI
-								+ input.attr("onclick").split("'")[1];
-					}
-
-					// link per effettuare l'iscrizione
-					if (Utils.isLink(link)) {
-						app.setLink(link);
-					} else {
-						app.setLink(input.text());
-					}
-				}
+				for (Element fs : Utils.jsoupSelect(page_HTML, "fieldset"))
+					children.add(new Appello(fs));
 			}
 		}
 	}

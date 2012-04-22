@@ -1,23 +1,63 @@
 package com.juliasoft.libretto.utils;
 
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import com.juliasoft.libretto.connection.SsolHttpClient;
+
 public class Appello {
+	// TODO
+	private final String esame = null;
+	private final String data;
+	private final String ora;
+	private final String tipo;
+	private final String modulo;
+	private final String docenti;
+	private final String link;
 
-	private String esame;
-	private String data;
-	private String anno;
-	private String crediti;
-	private String ora;
-	private String tipo;
-	private String modulo;
-	private String docenti;
-	private String link;
+	public Appello(Element fs) {
+		String docenti = "-";
+		String test = fs.select("p").text();
+		String split[] = test.replace("Verbalizzante", ":Verbalizzante").split(":");
+		if (split.length > 1) {
+			docenti = "<b>" + split[0] + ": </b>" + split[1];
+			if (split.length > 3)
+				docenti += "<br><b>" + split[2] + ": </b>" + split[3];
+		}
+		this.docenti = docenti;
 
-	public String getAnno() {
-		return anno;
-	}
+		Elements tds = fs.select("td.Content_Chiaro");
+		Elements input = tds.get(4).children();
+		tds.remove(4);
+		String tipo = "", modulo = "", data = "", ora = "";
 
-	public String getCrediti() {
-		return crediti;
+		for (int i = 0; i < tds.size(); i += 4) {
+			if (tds.get(i).text().equals("Solo verbalizzazione"))
+				tipo += "Verb." + "\n";
+			else
+				tipo += tds.get(i).text() + "\n";
+
+			modulo += tds.get(i + 1).text() + "\n";
+			data += tds.get(i + 2).text() + "\n";
+			ora += tds.get(i + 3).text() + "\n";
+		}
+
+		this.tipo = tipo;
+		this.modulo = modulo;
+		this.data = data;
+		this.ora = ora;
+
+		String link;
+		if (input.hasAttr("onclick"))
+			link = SsolHttpClient.AUTH_URI + input.attr("onclick").split("'")[1];
+		else
+			link = "";
+
+		// link per effettuare l'iscrizione
+		if (!Utils.isLink(link))
+			link = input.text();
+
+		this.link = link;
 	}
 
 	public String getData() {
@@ -46,41 +86,5 @@ public class Appello {
 
 	public String getTipo() {
 		return tipo;
-	}
-
-	public void setAnno(String anno) {
-		this.anno = anno;
-	}
-
-	public void setCrediti(String crediti) {
-		this.crediti = crediti;
-	}
-
-	public void setData(String data) {
-		this.data = data;
-	}
-
-	public void setDocenti(String docenti) {
-		this.docenti = docenti;
-	}
-
-	public void setEsame(String esame) {
-		this.esame = esame;
-	}
-
-	public void setLink(String link) {
-		this.link = link;
-	}
-
-	public void setModulo(String modulo) {
-		this.modulo = modulo;
-	}
-
-	public void setOra(String ora) {
-		this.ora = ora;
-	}
-
-	public void setTipo(String tipo) {
-		this.tipo = tipo;
 	}
 }
