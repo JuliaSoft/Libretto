@@ -1,13 +1,10 @@
 package com.juliasoft.libretto.activity;
 
-import java.io.FileInputStream;
 import java.util.ArrayList;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
 import com.juliasoft.libretto.utils.Utils;
 
-import org.jsoup.nodes.Attribute;
-import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -25,7 +22,6 @@ import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
@@ -41,15 +37,9 @@ public class Info extends Activity {
 
 	private static final int MENU_UPDATE = R.id.info_menu_update;
 	private static final int CONNECTION_ERROR = 0;
-	private static final int EXPORT_XML_MESSAGE = 1;
-	private static final int CLEAR_XML_MESSAGE = 2;
 	private static final int INIT = 3;
 	private static final int EDIT = 4;
 	private static final int DIALOG_MESSAGE = 5;
-
-	private ConnectionManager cm;
-
-	private static final String INFO_XML_FILE = "Info.xml";
 
 	private ArrayList<TextView> listView;
 	private ArrayList<EditText> listEdit;
@@ -64,7 +54,6 @@ public class Info extends Activity {
 	}
 
 	private void init() {
-		cm = ConnectionManager.getInstance();
 		listInfo = new ArrayList<String>();
 
 		TextView utente = (TextView) findViewById(R.id.user);
@@ -129,26 +118,20 @@ public class Info extends Activity {
 		listView.add(percorso);
 
 		Intent intent = getIntent();
-		String pkg = getPackageName();
-		String page_HTML = intent.getStringExtra(pkg + ".info");
-		// estrazione dei dati dalla pagina HTML
-
-		if (!loadXML())
-			retriveData(page_HTML);
+		String page_HTML = intent.getStringExtra(getPackageName() + ".info");
+		retrieveData(page_HTML);
 	}
 
-	private void retriveData(String page_HTML) {
-		if (page_HTML == null) {
+	private void retrieveData(String page_HTML) {
+		if (page_HTML == null)
 			return;
-		}
 
 		try {
 			// elimino stringhe speciali
 			page_HTML = Utils.removeSpecialString(page_HTML, "&.*?;");
 
 			// recupero la matricola e il nome utente
-			Element div = Utils.jsoupSelect(page_HTML, "div.titolopagina")
-					.first();
+			Element div = Utils.jsoupSelect(page_HTML, "div.titolopagina").first();
 			div.children().remove();
 			String split[] = div.text().split(" - ");
 			if (split.length == 2) {
@@ -163,53 +146,20 @@ public class Info extends Activity {
 			}
 			infoHandler.sendEmptyMessage(INIT);
 		} catch (Exception e) {
-			Log.e(TAG, "Retrive data: " + e.getMessage());
+			Log.e(TAG, "Retrieving data: " + e.getMessage());
 		}
 
 	}
 
-	private boolean loadXML() {
-		Log.i(TAG, "Load XML");
-		FileInputStream fileis = Utils.loadXMLFile(INFO_XML_FILE);
-		if (fileis == null) {
-			return false;
-		}
-
-		Attributes attrs = Utils
-				.jsoupSelect(Utils.inputStreamToString(fileis), "info>dettagli")
-				.first().attributes();
-
-		int i = 0;
-		for (Attribute attr : attrs) {
-			listView.get(i).setText(attr.getValue());
-			i++;
-		}
-
-		Log.i(TAG, "Load XML completato");
-		return true;
-	}
-
-	/**
-	 * 
-	 * @param menu
-	 * @return
-	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
-		MenuInflater mInflater = getMenuInflater();
-		mInflater.inflate(R.menu.info_menu, menu);
+		getMenuInflater().inflate(R.menu.info_menu, menu);
 		return true;
 	}
 
-	/**
-	 * 
-	 * @param item
-	 * @return
-	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-
 		switch (item.getItemId()) {
 		case MENU_UPDATE:
 			new UpdateInfoTask().execute();
@@ -232,20 +182,14 @@ public class Info extends Activity {
 
 			switch (msg.what) {
 			case INIT:
-				for (TextView tv : listView) {
-					tv.setText(listInfo.get(i));
-					i++;
-				}
+				for (TextView tv : listView)
+					tv.setText(listInfo.get(i++));
 				break;
 			case EDIT:
-				for (TextView tv : listView) {
-					tv.setText(listEdit.get(i).getText().toString());
-					i++;
-				}
+				for (TextView tv : listView)
+					tv.setText(listEdit.get(i++).getText().toString());
 				break;
 			case CONNECTION_ERROR:
-			case EXPORT_XML_MESSAGE:
-			case CLEAR_XML_MESSAGE:
 				showDialog(DIALOG_MESSAGE);
 				break;
 			}
@@ -265,11 +209,12 @@ public class Info extends Activity {
 	public class UpdateInfoTask extends AsyncTask<Void, Void, Void> {
 
 		private ProgressDialog progressDialog;
+		private ConnectionManager cm;
 
 		@Override
 		protected void onPreExecute() {
-			progressDialog = ProgressDialog.show(Info.this, "Please wait...",
-					"Loading data ...", true);
+			progressDialog = ProgressDialog.show(Info.this, "Please wait...", "Loading data ...", true);
+			cm = ConnectionManager.getInstance();
 		}
 
 		@Override
@@ -282,10 +227,10 @@ public class Info extends Activity {
 			if (!Utils.isNetworkAvailable(Info.this)) {
 				cm.setLogged(false);
 				showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
-				return null;
 			}
-			retriveData(cm.connection(ConnectionManager.ESSE3,
-					Utils.TARGET_INFO));
+			else
+				retrieveData(cm.connection(ConnectionManager.ESSE3, Utils.TARGET_INFO));
+
 			return null;
 		}
 	}
