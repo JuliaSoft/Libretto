@@ -50,11 +50,11 @@ public class Esame extends Row {
 		return annoCorso;
 	}
 
-	public String getData_esame() {
+	public String getData() {
 		return data;
 	}
 
-	public String getPeso_crediti() {
+	public String getCrediti() {
 		return numeroCrediti;
 	}
 

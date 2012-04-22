@@ -1,6 +1,5 @@
 package com.juliasoft.libretto.activity;
 
-import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,7 +26,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -50,10 +48,7 @@ public class Libretto extends ListActivity {
 	private static final int DIALOG_MESSAGE = 7;
 	private static final int SHOW_ACTIVITY = 8;
 
-	private static final String LIBRETTO_XML_FILE = "Libretto.xml";
-
 	private Set<Esame> esami;
-	private int tot_crediti_sost;
 	private int mMethod;
 	private ArrayList<String> pianoStudio = new ArrayList<String>();
 
@@ -84,8 +79,8 @@ public class Libretto extends ListActivity {
 		myIntent.putExtra(pkg + ".esame", esame.getNome());
 		myIntent.putExtra(pkg + ".anno_corso", esame.getAnno_corso());
 		myIntent.putExtra(pkg + ".aa_freq", esame.getAa_freq());
-		myIntent.putExtra(pkg + ".peso_crediti", esame.getPeso_crediti());
-		myIntent.putExtra(pkg + ".data_esame", esame.getData_esame());
+		myIntent.putExtra(pkg + ".peso_crediti", esame.getCrediti());
+		myIntent.putExtra(pkg + ".data_esame", esame.getData());
 		myIntent.putExtra(pkg + ".voto", esame.getVoto());
 		myIntent.putExtra(pkg + ".ric", esame.getRic());
 		myIntent.putExtra(pkg + ".q_val", esame.getQ_val());
@@ -109,49 +104,9 @@ public class Libretto extends ListActivity {
 		}
 	}
 
-	private boolean loadXML() {
-		Log.i(TAG, "Load XML");
-		FileInputStream fileis = Utils.loadXMLFile(LIBRETTO_XML_FILE);
-		if (fileis == null) {
-			return false;
-		}
-
-		String xml = Utils.inputStreamToString(fileis);
-		Elements anni = Utils.jsoupSelect(xml, "libretto>anno");
-
-		if (!anni.isEmpty()) {
-			for (Element anno : anni) {
-				adapter.addSeparatorItem(new Separator(anno.attr("nome")));
-				for (Element esame : anno.select("esame")) {
-					Esame e = new Esame(esame);
-					adapter.addItem(e);
-					esami.add(e);
-				}
-			}
-
-		} else {
-			for (Element esame : Utils.jsoupSelect(xml, "libretto>esame")) {
-				Esame e = new Esame(esame);
-				adapter.addItem(e);
-				esami.add(e);
-			}
-		}
-
-		Log.i(TAG, "Load XML completato");
-		return true;
-	}
-
 	private void showMessage(int type, String msg) {
 		builder.setMessage(msg);
 		librettoHandler.sendEmptyMessage(type);
-	}
-
-	private void reset() {
-		adapter.reset();
-		adapter = new SeparatedListAdapter(Libretto.this,
-				R.layout.libretto_item);
-		pianoStudio.clear();
-		esami.clear();
 	}
 
 	private void init() {
@@ -314,23 +269,18 @@ public class Libretto extends ListActivity {
 			View row = convertView;
 			int type = getItemViewType(position);
 
-			if (convertView == null) {
+			if (row == null) {
 				switch (type) {
 				case TYPE_ITEM:
-					LayoutInflater inflater = getLayoutInflater();
-					row = inflater.inflate(R.layout.libretto_item, parent,
-							false);
+					row = getLayoutInflater().inflate(R.layout.libretto_item, parent, false);
 					break;
 				case TYPE_SEPARATOR:
-					inflater = getLayoutInflater();
-					row = inflater.inflate(R.layout.libretto_separator, parent,
-							false);
+					row = getLayoutInflater().inflate(R.layout.libretto_separator, parent, false);
 					break;
 				}
 			}
 			switch (type) {
-			case TYPE_ITEM:
-
+			case TYPE_ITEM: {
 				Esame esame = (Esame) rows.get(position);
 
 				ImageView v = (ImageView) row.findViewById(R.id.bar);
@@ -339,18 +289,19 @@ public class Libretto extends ListActivity {
 
 				TextView voto = (TextView) row.findViewById(R.id.li_voto);
 				voto.setText(esame.getVoto());
-				if (esame.getVoto() != null && esame.getVoto().length() > 0) {
+				if (esame.getVoto() != null && esame.getVoto().length() > 0)
 					v.setBackgroundResource(R.layout.green_bar);
-				} else {
+				else
 					v.setBackgroundResource(R.layout.red_bar);
-				}
-				break;
-			case TYPE_SEPARATOR:
 
-				Esame e = (Esame) rows.get(position);
-				TextView vi = (TextView) row.findViewById(R.id.separator);
-				vi.setText(e.getNome());
 				break;
+			}
+			case TYPE_SEPARATOR: {
+				Esame esame = (Esame) rows.get(position);
+				TextView vi = (TextView) row.findViewById(R.id.separator);
+				vi.setText(esame.getNome());
+				break;
+			}
 			}
 
 			return row;
@@ -363,16 +314,14 @@ public class Libretto extends ListActivity {
 	 * @return
 	 */
 	private double arrotonda(double numero, int nCifreDecimali) {
-		return Math.round(numero * Math.pow(10, nCifreDecimali))
-				/ Math.pow(10, nCifreDecimali);
+		return Math.round(numero * Math.pow(10, nCifreDecimali)) / Math.pow(10, nCifreDecimali);
 	}
 
 	private double mediaAritmetica() {
-		double somma = 0;
+		int somma = 0;
+
 		for (Esame e: esami)
-			if (e.getData_esame() == null || e.getData_esame().equals(""))
-				continue;
-			else if (e.getVoto().equals("30L"))
+			if (e.getVoto().equals("30L"))
 				somma += 30;
 			else
 				try {
@@ -381,58 +330,59 @@ public class Libretto extends ListActivity {
 				catch (NumberFormatException ex) {}
 
 		try {
-			return arrotonda(somma / numeroEsami(), 2);
+			return arrotonda((double) somma / numeroEsami(), 2);
 		} catch (Exception e) {
-			return 0;
+			return 0.0;
 		}
 	}
 
 	private double mediaPonderata() {
-		int count = 0;
-		double somma = 0;
-		int crediti = 0;
-		for (Esame e: esami)
-			if (e.getVoto().equals("30L")) {
-				somma += 30 * crediti;
+		int count = 0, somma = 0;
+
+		for (Esame e: esami) {
+			String voto = e.getVoto();
+
+			try {
+				int crediti = voto.equals("30L") ? 30 : Integer.parseInt(e.getCrediti());
+				somma += Integer.parseInt(e.getVoto()) * crediti;
 				count += crediti;
 			}
-			else
-				try {
-					crediti = Integer.parseInt(e.getPeso_crediti());
-					somma += Integer.parseInt(e.getVoto()) * crediti;
-					count += crediti;
-				} catch (NumberFormatException ex) {}
+			catch (NumberFormatException ex) {}
+		}
 
 		try {
-			return arrotonda(somma / count, 2);
+			return arrotonda((double) somma / count, 2);
 		} catch (Exception e) {
-			return 0;
+			return 0.0;
 		}
 	}
 
 	private int numeroEsami() {
-		int numeroEsamiSostenuti = 0;
-		tot_crediti_sost = 0;
-		int no_media = 0;
+		int result = 0;
+
+		for (Esame e: esami)
+			if (!e.getVoto().equals("APPR") && !e.getVoto().equals("IDO"))
+				result++;
+
+		return result;
+	}
+
+	private int creditiSostenuti() {
+		int result = 0;
 		for (Esame e: esami) {
+			String voto = e.getVoto();
+
 			try {
 				Integer.parseInt(e.getVoto());
-				numeroEsamiSostenuti++;
-				if (e.getData_esame() != null)
-					tot_crediti_sost += Integer.parseInt(e.getPeso_crediti());
+				if (e.getData() != null)
+					result += Integer.parseInt(e.getCrediti());
 			} catch (Exception ex) {
-				if (e.getVoto().equals("30L")) {
-					numeroEsamiSostenuti++;
-					tot_crediti_sost += Integer.parseInt(e.getPeso_crediti());
-				}
-				if (e.getVoto().equals("APPR") || e.getVoto().equals("IDO")) {
-					numeroEsamiSostenuti++;
-					tot_crediti_sost += Integer.parseInt(e.getPeso_crediti());
-					no_media++;
-				}
+				if (voto.equals("30L") || e.getVoto().equals("APPR") || e.getVoto().equals("IDO"))
+					result += Integer.parseInt(e.getCrediti());
 			}
 		}
-		return numeroEsamiSostenuti - no_media;
+
+		return result;
 	}
 
 	@Override
@@ -444,12 +394,10 @@ public class Libretto extends ListActivity {
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
-		switch (id) {
-		case DIALOG_MESSAGE:
+		if (id == DIALOG_MESSAGE)
 			return builder;
-		default:
+		else
 			return super.onCreateDialog(id);
-		}
 	}
 
 	/**
@@ -459,7 +407,6 @@ public class Libretto extends ListActivity {
 	 */
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-
 		switch (item.getItemId()) {
 		case MENU_MEDIA:
 			librettoHandler.sendEmptyMessage(SHOW_ACTIVITY);
@@ -485,7 +432,7 @@ public class Libretto extends ListActivity {
 				intent.putExtra(pkg + ".aritm", String.valueOf(mediaAritmetica()));
 				intent.putExtra(pkg + ".pond", String.valueOf(mediaPonderata()));
 				intent.putExtra(pkg + ".num", String.valueOf(numeroEsami()));
-				intent.putExtra(pkg + ".crediti", String.valueOf(tot_crediti_sost));
+				intent.putExtra(pkg + ".crediti", String.valueOf(creditiSostenuti()));
 
 				startActivity(intent);
 				break;
@@ -499,7 +446,7 @@ public class Libretto extends ListActivity {
 
 	public class LibrettoTask extends AsyncTask<String, Void, Void> {
 
-		private ProgressDialog dialog;
+		private final ProgressDialog dialog;
 
 		public LibrettoTask() {
 			dialog = new ProgressDialog(Libretto.this);
@@ -514,6 +461,13 @@ public class Libretto extends ListActivity {
 			reset();
 		}
 
+		private void reset() {
+			adapter.reset();
+			adapter = new SeparatedListAdapter(Libretto.this, R.layout.libretto_item);
+			pianoStudio.clear();
+			esami.clear();
+		}
+
 		@Override
 		protected void onPostExecute(Void success) {
 			if (dialog.isShowing())
@@ -524,16 +478,16 @@ public class Libretto extends ListActivity {
 
 		@Override
 		protected Void doInBackground(String... params) {
-			if (params != null && params.length > 0) {
-				if (!loadXML())
-					retrieveData(params[0]);
-			} else if (!Utils.isNetworkAvailable(Libretto.this)) {
+			if (params != null && params.length > 0)
+				retrieveData(params[0]);
+			else if (!Utils.isNetworkAvailable(Libretto.this)) {
 				cm.setLogged(false);
 				showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
-			} else
+			}
+			else
 				retrieveData(cm.connection(ConnectionManager.ESSE3, Utils.TARGET_LIBRETTO));
+
 			return null;
 		}
 	}
-
 }
