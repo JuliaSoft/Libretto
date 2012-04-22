@@ -28,7 +28,7 @@ public class DettagliEsame extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		setContentView(R.layout.dettaggli_esame);
+		setContentView(R.layout.dettagli_esame);
 		init();
 	}
 

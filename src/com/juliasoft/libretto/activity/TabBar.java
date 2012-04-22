@@ -5,20 +5,20 @@ import android.app.TabActivity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
+import android.widget.TextView;
 
-public class TabBar extends TabActivity implements OnClickListener {
+public class TabBar extends TabActivity {
 
 	public static final String TAG = TabActivity.class.getName();
-
-	private Button ok;
-	private WindowManager.LayoutParams lp;
-	private AlertDialog dialog;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -28,20 +28,7 @@ public class TabBar extends TabActivity implements OnClickListener {
 	}
 
 	private void init() {
-		// INIT GUI
-		ok = (Button) findViewById(R.id.id_ok_info);
-		ok.setOnClickListener(this);
-		dialog = new AlertDialog.Builder(TabBar.this).setTitle("Informazioni")
-				.setMessage(infoMessage())
-				.setIcon(R.drawable.info)
-				.setPositiveButton("Close", null).create();
-
-		lp = dialog.getWindow().getAttributes();
-		lp.dimAmount = 0.5f;
-
-		dialog.getWindow().setAttributes(lp);
-		dialog.getWindow()
-				.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		initInfoButton();
 
 		Resources res = getResources();
 		String pkg = getPackageName();
@@ -61,16 +48,14 @@ public class TabBar extends TabActivity implements OnClickListener {
 
 		TabSpec infoTab = tabHost
 				.newTabSpec("Info")
-				.setIndicator(null,
-						res.getDrawable(R.drawable.informazioni))
+				.setIndicator(null, res.getDrawable(R.drawable.informazioni))
 				.setContent(informazioni);
 		tabHost.addTab(infoTab);
 
 		// LIBRETTO
 		TabSpec librettoTab = tabHost
 				.newTabSpec("Libretto")
-				.setIndicator(null,
-						res.getDrawable(R.drawable.libretto))
+				.setIndicator(null, res.getDrawable(R.drawable.libretto))
 				.setContent(libretto);
 		tabHost.addTab(librettoTab);
 
@@ -93,25 +78,39 @@ public class TabBar extends TabActivity implements OnClickListener {
 
 		TabSpec iscrizTab = tabHost
 				.newTabSpec("Iscrizioni")
-				.setIndicator(null,
-						res.getDrawable(R.drawable.iscrizioni))
+				.setIndicator(null, res.getDrawable(R.drawable.iscrizioni))
 				.setContent(iscrizioni);
 		tabHost.addTab(iscrizTab);
 	}
 
-	private String infoMessage() {
-		return "Quest'applicazione si basa sull'utilizzo del protocollo HTTP per "
-				+ "effettuare richieste ai server dell'Universit� di Verona, "
-				+ "mantenendo un certo livello di sicurezza per mezzo "
-				+ "dell'utilizzo di socket SSL.\n"
-				+ "Successivamente il recupero delle informazioni utili dalla "
-				+ "pagina HTML avviene tramite un parser basato sull'uso di Jsoup";
-	}
+	private void initInfoButton() {
+		String message = "Quest'applicazione accede ai server dell'Università di Verona "
+				+ "utilizzando HTML e, per sicurezza, dei socket SSL.\n"
+				+ "Non essendo note delle API per il sistema ESSE3, il recupero delle informazioni dalla "
+				+ "pagina HTML avviene tramite un parser basato sulla libreria Jsoup (http://jsoup.org), "
+				+ "il che potrà comprometterne in futuro il funzionamento. "
+				+ "Questo software è stato sviluppato da Davide Vallicella per Julia Srl (http://www.juliasoft.com).";
 
-	@Override
-	public void onClick(View v) {
-		if (v == ok) {
-			dialog.show();
-		}
+		TextView text = new TextView(this);
+		SpannableString s = new SpannableString(message);
+		Linkify.addLinks(s, Linkify.WEB_URLS);
+		text.setText(s);
+		text.setMovementMethod(LinkMovementMethod.getInstance());
+
+		final AlertDialog dialog = new AlertDialog.Builder(this).setTitle("Informazioni")
+				.setIcon(R.drawable.info)
+				.setPositiveButton("Close", null)
+				.setView(text).create();
+		dialog.getWindow().getAttributes().dimAmount = 0.5f;
+		dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+
+		Button ok = (Button) findViewById(R.id.id_ok_info);
+		ok.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				dialog.show();
+			}
+		});
 	}
 }
