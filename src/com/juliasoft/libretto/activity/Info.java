@@ -70,41 +70,17 @@ public class Info extends Activity {
 		View edit_layout = inflater.inflate(R.layout.info_edit, null);
 
 		listEdit = new ArrayList<EditText>();
-		EditText et = (EditText) edit_layout.findViewById(R.id.et_info_nome);
-		listEdit.add(et);
-		et = (EditText) edit_layout.findViewById(R.id.et_info_matricola);
-		listEdit.add(et);
-		et = (EditText) edit_layout.findViewById(R.id.et_info_tipo);
-		listEdit.add(et);
-		et = (EditText) edit_layout.findViewById(R.id.et_info_profilo);
-		listEdit.add(et);
-		et = (EditText) edit_layout.findViewById(R.id.et_info_anno);
-		listEdit.add(et);
-		et = (EditText) edit_layout.findViewById(R.id.et_info_immat);
-		listEdit.add(et);
-		et = (EditText) edit_layout.findViewById(R.id.et_info_corso);
-		listEdit.add(et);
-		et = (EditText) edit_layout.findViewById(R.id.et_info_ordin);
-		listEdit.add(et);
-		et = (EditText) edit_layout.findViewById(R.id.et_info_percorso);
-		listEdit.add(et);
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_nome));
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_matricola));
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_tipo));
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_profilo));
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_anno));
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_immat));
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_corso));
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_ordin));
+		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_percorso));
 
-		builder = new AlertDialog.Builder(this).setTitle("Login")
-				.setIcon(android.R.drawable.ic_dialog_alert).create();
-		builder.setButton("OK", new DialogInterface.OnClickListener() {
-
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-			}
-
-		});
-
-		WindowManager.LayoutParams lp = builder.getWindow().getAttributes();
-		lp.dimAmount = 0.5f;
-
-		builder.getWindow().setAttributes(lp);
-		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		initLoginButton();
 
 		listView = new ArrayList<TextView>();
 		listView.add(utente);
@@ -122,33 +98,46 @@ public class Info extends Activity {
 		retrieveData(page_HTML);
 	}
 
+	private void initLoginButton() {
+		builder = new AlertDialog.Builder(this).setTitle("Login")
+				.setIcon(android.R.drawable.ic_dialog_alert).create();
+		builder.setButton("OK", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+
+		});
+
+		builder.getWindow().getAttributes().dimAmount = 0.5f;
+		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+	}
+
 	private void retrieveData(String page_HTML) {
-		if (page_HTML == null)
-			return;
-
-		try {
-			// elimino stringhe speciali
-			page_HTML = Utils.removeSpecialString(page_HTML, "&.*?;");
-
-			// recupero la matricola e il nome utente
-			Element div = Utils.jsoupSelect(page_HTML, "div.titolopagina").first();
-			div.children().remove();
-			String split[] = div.text().split(" - ");
-			if (split.length == 2) {
-				listInfo.add(split[0]);
-				listInfo.add(split[1]);
+		if (page_HTML != null)
+			try {
+				// elimino stringhe speciali
+				page_HTML = Utils.removeSpecialString(page_HTML, "&.*?;");
+	
+				// recupero la matricola e il nome utente
+				Element div = Utils.jsoupSelect(page_HTML, "div.titolopagina").first();
+				div.children().remove();
+				String split[] = div.text().split(" - ");
+				if (split.length == 2) {
+					listInfo.add(split[0]);
+					listInfo.add(split[1]);
+				}
+	
+				// recupero tutte le informazioni utili dell'utente
+				Elements tds = Utils.jsoupSelect(page_HTML, "td.tplMaster");
+				for (Element td : tds)
+					listInfo.add(td.text());
+	
+				infoHandler.sendEmptyMessage(INIT);
+			} catch (Exception e) {
+				Log.e(TAG, "Retrieving data: " + e.getMessage());
 			}
-
-			// recupero tutte le informazioni utili dell'utente
-			Elements tds = Utils.jsoupSelect(page_HTML, "td.tplMaster");
-			for (Element td : tds) {
-				listInfo.add(td.text());
-			}
-			infoHandler.sendEmptyMessage(INIT);
-		} catch (Exception e) {
-			Log.e(TAG, "Retrieving data: " + e.getMessage());
-		}
-
 	}
 
 	@Override
@@ -178,17 +167,19 @@ public class Info extends Activity {
 	private Handler infoHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
-			int i = 0;
-
 			switch (msg.what) {
-			case INIT:
+			case INIT: {
+				int i = 0;
 				for (TextView tv : listView)
 					tv.setText(listInfo.get(i++));
 				break;
-			case EDIT:
+			}
+			case EDIT: {
+				int i = 0;
 				for (TextView tv : listView)
 					tv.setText(listEdit.get(i++).getText().toString());
 				break;
+			}
 			case CONNECTION_ERROR:
 				showDialog(DIALOG_MESSAGE);
 				break;
@@ -207,7 +198,6 @@ public class Info extends Activity {
 	}
 
 	public class UpdateInfoTask extends AsyncTask<Void, Void, Void> {
-
 		private ProgressDialog progressDialog;
 		private ConnectionManager cm;
 

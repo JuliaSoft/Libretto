@@ -23,8 +23,8 @@ public class Medie extends Activity {
 	private void init() {
 		Intent intent = getIntent();
 		String pkg = getPackageName();
-		String media_aritm = intent.getStringExtra(pkg + ".aritm");
-		String media_pond = intent.getStringExtra(pkg + ".pond");
+		String meditaAritmetica = intent.getStringExtra(pkg + ".aritm");
+		String mediaPonderata = intent.getStringExtra(pkg + ".pond");
 		String num = intent.getStringExtra(pkg + ".num");
 		int crediti = Integer.parseInt(intent.getStringExtra(pkg + ".crediti"));
 
@@ -32,9 +32,9 @@ public class Medie extends Activity {
 		int x100 = (int) Math.round(((double) crediti * 100) / 180);
 		percent.setText(x100 + " %");
 		TextView tvMa = (TextView) findViewById(R.id.idMediaA);
-		tvMa.setText(media_aritm + " / 30");
+		tvMa.setText(meditaAritmetica + " / 30");
 		TextView tvMp = (TextView) findViewById(R.id.idMediaP);
-		tvMp.setText(media_pond + " / 30");
+		tvMp.setText(mediaPonderata + " / 30");
 		TextView tvNum = (TextView) findViewById(R.id.idNumE);
 		tvNum.setText(num);
 		TextView tvCrediti = (TextView) findViewById(R.id.idNumC);
@@ -43,9 +43,8 @@ public class Medie extends Activity {
 		pg.setMax(180);
 
 		final float[] roundedCorners = new float[] { 5, 5, 5, 5, 5, 5, 5, 5 };
-		ShapeDrawable pgDrawable = new ShapeDrawable(new RoundRectShape(
-				roundedCorners, null, null));
-		String color = "";
+		ShapeDrawable pgDrawable = new ShapeDrawable(new RoundRectShape(roundedCorners, null, null));
+		String color;
 		if (crediti <= 40)
 			color = "#FF0000";
 		else if (crediti <= 80)
@@ -58,11 +57,9 @@ public class Medie extends Activity {
 			color = "#00FF00";
 
 		pgDrawable.getPaint().setColor(Color.parseColor(color));
-		ClipDrawable progress = new ClipDrawable(pgDrawable, Gravity.LEFT,
-				ClipDrawable.HORIZONTAL);
+		ClipDrawable progress = new ClipDrawable(pgDrawable, Gravity.LEFT, ClipDrawable.HORIZONTAL);
 		pg.setProgressDrawable(progress);
-		pg.setBackgroundDrawable(getResources().getDrawable(
-				android.R.drawable.progress_horizontal));
+		pg.setBackgroundDrawable(getResources().getDrawable(android.R.drawable.progress_horizontal));
 		pg.setProgress(crediti);
 	}
 }

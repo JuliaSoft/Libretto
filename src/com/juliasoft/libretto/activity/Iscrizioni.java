@@ -44,8 +44,6 @@ public class Iscrizioni extends ExpandableListActivity {
 	private ConnectionManager cm;
 	private ArrayList<String> groupData;
 	private ArrayList<List<Object>> childData;
-	private String page_data;
-	private String url;
 	private int mMethod;
 	private String type;
 
@@ -88,10 +86,9 @@ public class Iscrizioni extends ExpandableListActivity {
 		new MyAsyncTask(false).execute(page_HTML);
 	}
 
-	private void retriveData(String page_HTML) {
-		if (page_HTML == null) {
+	private void retrieveData(String page_HTML) {
+		if (page_HTML == null)
 			return;
-		}
 
 		if (type.equals("OLD")) {
 			String esame = Utils
@@ -456,9 +453,10 @@ public class Iscrizioni extends ExpandableListActivity {
 	}
 
 	public class MyAsyncTask extends AsyncTask<String, Void, Void> {
-
 		private ProgressDialog progressDialog;
-		private boolean connect;
+		private final boolean connect;
+		private String url;
+		private String pageData;
 
 		public MyAsyncTask(boolean connect) {
 			this.connect = connect;
@@ -466,18 +464,16 @@ public class Iscrizioni extends ExpandableListActivity {
 
 		@Override
 		protected void onPreExecute() {
-			progressDialog = ProgressDialog.show(Iscrizioni.this,
-					"Please wait...", "Loading data ...", true);
+			progressDialog = ProgressDialog.show(Iscrizioni.this, "Please wait...", "Loading data ...", true);
 		}
 
 		@Override
 		protected void onPostExecute(Void result) {
 			if (connect) {
-				Intent intent = new Intent(getApplicationContext(),
-						IscrizioneAppello.class);
+				Intent intent = new Intent(getApplicationContext(), IscrizioneAppello.class);
 				String pkg = getPackageName();
 				// setto i dati ricavati dal login
-				intent.putExtra(pkg + ".iscriz", page_data);
+				intent.putExtra(pkg + ".iscriz", pageData);
 				intent.putExtra(pkg + ".url", url);
 				startActivity(intent);
 			} else {
@@ -491,9 +487,9 @@ public class Iscrizioni extends ExpandableListActivity {
 			if (params != null && params.length > 0) {
 				if (connect) {
 					url = params[0];
-					page_data = cm.connection(ConnectionManager.SSOL, url);
+					pageData = cm.connection(ConnectionManager.SSOL, url);
 				} else {
-					retriveData(params[0]);
+					retrieveData(params[0]);
 				}
 			}
 			return null;
