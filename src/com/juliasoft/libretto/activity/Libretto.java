@@ -128,7 +128,6 @@ public class Libretto extends ListActivity {
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
-
 		});
 
 		WindowManager.LayoutParams lp = builder.getWindow().getAttributes();
@@ -196,7 +195,7 @@ public class Libretto extends ListActivity {
 						try {
 							pianoStudio.add(tr.select("td").get(1).text());
 						} catch (Exception e) {
-							// TODO: handle exception
+							Log.e(TAG, "Piano studi: " + e.getMessage());
 						}
 					}
 				}

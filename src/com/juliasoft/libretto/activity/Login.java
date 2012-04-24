@@ -324,16 +324,13 @@ public class Login extends Activity {
 			dialog = new ProgressDialog(Login.this);
 			dialog.setTitle("Please wait...");
 			dialog.setCancelable(true);
+			cm = ConnectionManager.getInstance();
 		}
 
 		@Override
 		protected void onPreExecute() {
 			dialog.setMessage("Loading data ...");
 			dialog.show();
-			if (cm == null) {
-				cm = ConnectionManager.getInstance();
-				Log.i("INFO", "Start new ClientManager!");
-			}
 		}
 
 		@Override
@@ -349,7 +346,8 @@ public class Login extends Activity {
 		protected Boolean doInBackground(final String... params) {
 			if (params != null && params.length > 0)
 				return initPage(params[0]);
-			else if (!cm.isLogged())
+
+			if (!cm.isLogged())
 				login();
 
 			return cm.isLogged() ? initPage(Utils.TARGET_LIBRETTO) : false;
