@@ -48,15 +48,14 @@ public class HttpConnection implements Runnable {
 	private Map<String, String> params;
 	private Map<String, String> headers;
 
-	private HttpClient httpClient;
+	private final HttpClient httpClient;
 	private HttpResponse response;
 
 	public HttpConnection(DefaultHttpClient httpClient) {
 		this.httpClient = httpClient;
 	}
 
-	public void create(int method, String url, Map<String, String> headers,
-			Map<String, String> params) {
+	public void create(int method, String url, Map<String, String> headers, Map<String, String> params) {
 		this.method = method;
 		this.url = url;
 		this.headers = headers;
@@ -73,8 +72,7 @@ public class HttpConnection implements Runnable {
 		create(GET, url, null, null);
 	}
 
-	public void post(String url, Map<String, String> headers,
-			Map<String, String> params) {
+	public void post(String url, Map<String, String> headers, Map<String, String> params) {
 		create(POST, url, headers, params);
 	}
 
@@ -110,35 +108,29 @@ public class HttpConnection implements Runnable {
 	}
 
 	private void setHeaders(HttpUriRequest uriRq) {
-		if (headers != null && !headers.isEmpty()) {
-			for (Map.Entry<String, String> entry : headers.entrySet()) {
+		if (headers != null && !headers.isEmpty())
+			for (Map.Entry<String, String> entry : headers.entrySet())
 				uriRq.addHeader(entry.getKey(), entry.getValue());
-			}
-		}
 	}
 
 	private void setParams(HttpPost post) throws UnsupportedEncodingException {
 		if (params != null && !params.isEmpty()) {
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 
-			for (Map.Entry<String, String> entry : params.entrySet()) {
-				postParams.add(new BasicNameValuePair(entry.getKey(), entry
-						.getValue()));
-			}
+			for (Map.Entry<String, String> entry : params.entrySet())
+				postParams.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
 
 			post.setEntity(new UrlEncodedFormEntity(postParams, HTTP.UTF_8));
 		}
 	}
 
 	public void consumeContent() {
-		if (response == null) {
-			return;
-		}
-		try {
-			response.getEntity().consumeContent();
-		} catch (IOException e) {
-			Log.e(TAG, "Error consumeContent()");
-		}
+		if (response != null)
+			try {
+				response.getEntity().consumeContent();
+			} catch (IOException e) {
+				Log.e(TAG, "Error consumeContent()");
+			}
 	}
 
 	public void reset() {
@@ -148,16 +140,12 @@ public class HttpConnection implements Runnable {
 	}
 	
 	public int getStatusCode(){
-		if(response == null){
-			return -1;
-		}
-		return response.getStatusLine().getStatusCode();
+		return response == null ? -1 : response.getStatusLine().getStatusCode();
 	}
 
 	public HttpEntity getEntity() throws LoginException, ConnectException {
-		if (response == null) {
+		if (response == null)
 			throw new ConnectException(CONNECT_EXCEPTION);
-		}
 		
 		int status_code = getStatusCode();
 		switch (status_code) {
@@ -174,15 +162,13 @@ public class HttpConnection implements Runnable {
 			throw new ConnectException(HTTP_NOT_FOUND_EXCEPTION);
 		case HttpURLConnection.HTTP_UNAUTHORIZED:
 			consumeContent();
-			System.out.println("fallito---");
 			throw new LoginException(HTTP_UNAUTHORIZED_EXCEPTION);
 		case HttpURLConnection.HTTP_UNAVAILABLE:
 			consumeContent();
 			throw new ConnectException(HTTP_UNAVAILABLE_EXCEPTION);
 		default:
 			consumeContent();
-			throw new ConnectException(HTTP_DEFAULT_EXCEPTION
-					+ "\nStatus code: " + status_code);
+			throw new ConnectException(HTTP_DEFAULT_EXCEPTION + "\nStatus code: " + status_code);
 		}
 	}
 }

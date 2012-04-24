@@ -21,11 +21,11 @@ public class Esse3HttpClient extends DefaultHttpClient {
 	public static final String AUTH_URI = "https://" + DOMAIN + "/";
 	public static final int PORT = 443;
 
-	private ClientConnectionManager ccm = null;
-	private CredentialsProvider cp = null;
+	private ClientConnectionManager ccm;
+	private CredentialsProvider cp;
 
-	private String user;
-	private String pass;
+	private final String user;
+	private final String pass;
 
 	public Esse3HttpClient(String user, String pass) {
 		this.user = user;
@@ -33,22 +33,16 @@ public class Esse3HttpClient extends DefaultHttpClient {
 	}
 
 	private SSLSocketFactory newSslSocketFactory() {
-
-		// Log.d(TAG, "Creating ssl socket");
-
 		try {
 			// Pass the keystore to the SSLSocketFactory.
 			// The factory is responsible for the verification
 			// of the server certificate.
-			final SSLSocketFactory factory = new SSLSocketFactory(
-					ConnectionManager.getTrustStore(DOMAIN, PORT));
+			SSLSocketFactory factory = new SSLSocketFactory(ConnectionManager.getTrustStore(DOMAIN, PORT));
 			// Hostname verification from certificate
 			factory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
 			return factory;
 		} catch (final Exception e) {
-			Log.e(TAG,
-					"Caught exception when trying to create ssl socket factory. Reason: "
-							+ e.getMessage());
+			Log.e(TAG, "Caught exception when trying to create ssl socket factory. Reason: " + e.getMessage());
 
 			return null;
 		}
@@ -56,16 +50,11 @@ public class Esse3HttpClient extends DefaultHttpClient {
 
 	@Override
 	protected ClientConnectionManager createClientConnectionManager() {
-
 		if (ccm == null) {
-			// Log.d(TAG, "Creating client connection manager");
+			SchemeRegistry registry = new SchemeRegistry();
 
-			final SchemeRegistry registry = new SchemeRegistry();
-
-			// Log.d(TAG, "Adding https scheme for port: " + PORT);
 			// Register our SSLSocketFactory (with our Keystore) for port 443
-			registry.register(new Scheme("https", this.newSslSocketFactory(),
-					PORT));
+			registry.register(new Scheme("https", this.newSslSocketFactory(), PORT));
 			HttpConnectionParams.setSoTimeout(getParams(), 5000);
 			HttpConnectionParams.setConnectionTimeout(getParams(), 5000);
 			ccm = new SingleClientConnManager(getParams(), registry);
@@ -75,7 +64,6 @@ public class Esse3HttpClient extends DefaultHttpClient {
 
 	@Override
 	protected CredentialsProvider createCredentialsProvider() {
-
 		if (cp == null) {
 			cp = new BasicCredentialsProvider();
 			cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, pass));
