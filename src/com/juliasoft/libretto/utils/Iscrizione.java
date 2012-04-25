@@ -2,11 +2,12 @@ package com.juliasoft.libretto.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Iscrizione {
 
-	private HashMap<String, String> params;
-	private ArrayList<String> types;
+	private final HashMap<String, String> params;
+	private final List<String> types;
 	private String data;
 	private String iscritti;
 	private String luogo;
@@ -58,7 +59,7 @@ public class Iscrizione {
 		return iscritti;
 	}
 
-	public ArrayList<String> getTypes() {
+	public List<String> getTypes() {
 		return types;
 	}
 
