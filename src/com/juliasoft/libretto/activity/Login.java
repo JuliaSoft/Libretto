@@ -7,11 +7,6 @@ import java.util.regex.Pattern;
 
 import javax.security.auth.login.LoginException;
 
-import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.connection.Esse3HttpClient;
-import com.juliasoft.libretto.utils.IDContextMenu;
-import com.juliasoft.libretto.utils.Utils;
-
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -24,6 +19,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -38,6 +34,11 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.juliasoft.libretto.connection.ConnectionManager;
+import com.juliasoft.libretto.connection.Esse3HttpClient;
+import com.juliasoft.libretto.utils.IDContextMenu;
+import com.juliasoft.libretto.utils.Utils;
 
 public class Login extends Activity {
 
@@ -88,8 +89,6 @@ public class Login extends Activity {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
-				if (!isOnline())
-					loginHandler.sendEmptyMessage(SUCCESS);
 			}
 
 		});
@@ -201,7 +200,7 @@ public class Login extends Activity {
 
 	private boolean initPage(String url) {
 		// Pagina libretto studente
-		String page_HTML = cm.connection(ConnectionManager.ESSE3, url);
+		String page_HTML = cm.connection(ConnectionManager.ESSE3, url, null);
 
 		if (isMultiID(page_HTML)) {
 			selectID(page_HTML);
@@ -210,7 +209,7 @@ public class Login extends Activity {
 		html_pages.put("LIB", page_HTML);
 
 		// Pagina informazioni studente
-		page_HTML = cm.connection(ConnectionManager.ESSE3, Utils.TARGET_INFO);
+		page_HTML = cm.connection(ConnectionManager.ESSE3, Utils.TARGET_INFO, null);
 		html_pages.put("INFO", page_HTML);
 
 		// Pagina iscrizione esami
@@ -220,7 +219,7 @@ public class Login extends Activity {
 
 		if (trs.isEmpty()) {
 			// OLD
-			page_HTML = cm.connection(ConnectionManager.SSOL, Utils.TARGET_ISCRIZIONI_OLD);
+			page_HTML = cm.connection(ConnectionManager.SSOL, Utils.TARGET_ISCRIZIONI_OLD, null);
 			html_pages.put("ISCRIZ_OLD", page_HTML);
 		}
 		else

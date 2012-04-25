@@ -130,7 +130,7 @@ public class Iscrizioni extends ExpandableListActivity {
 			// se l'iscrizione all'esame corrente è aperta proseguo
 			if (Utils.isLink(link)) {
 				try {
-					page_HTML = cm.connection(ConnectionManager.SSOL, link);
+					page_HTML = cm.connection(ConnectionManager.SSOL, link, null);
 				} catch (Exception e) {
 					children.add(input.text());
 					continue;
@@ -359,7 +359,7 @@ public class Iscrizioni extends ExpandableListActivity {
 			if (params != null && params.length > 0) {
 				if (connect) {
 					url = params[0];
-					pageData = cm.connection(ConnectionManager.SSOL, url);
+					pageData = cm.connection(ConnectionManager.SSOL, url, null);
 				} else {
 					retrieveData(params[0]);
 				}

@@ -8,12 +8,16 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.security.auth.login.LoginException;
 
-import com.juliasoft.libretto.utils.Utils;
+import org.apache.http.cookie.Cookie;
+
 import android.util.Log;
+
+import com.juliasoft.libretto.utils.Utils;
 
 public class ConnectionManager {
 
@@ -24,6 +28,7 @@ public class ConnectionManager {
 
 	private static ConnectionManager instance;
 	private static KeyStore trustStore;
+	private static Map<Integer, List<Cookie>> cookies;
 
 	private String username;
 	private String password;
@@ -38,6 +43,7 @@ public class ConnectionManager {
 		isLogged = false;
 		username = "";
 		password = "";
+		cookies = new HashMap<Integer, List<Cookie>>();
 	}
 
 	public static ConnectionManager getInstance() {
@@ -79,18 +85,31 @@ public class ConnectionManager {
 			ssol_login_HTML = Utils.inputStreamToString(ssolConn.getEntity()
 					.getContent());
 			if (ssol_login_HTML.contains("Content_Chiaro Warning"))
-				throw new LoginException(HttpConnection.HTTP_UNAUTHORIZED_EXCEPTION);
+				throw new LoginException(
+						HttpConnection.HTTP_UNAUTHORIZED_EXCEPTION);
 		} catch (IOException e) {
 		}
 		isLogged = true;
+		// After Login save cookies
+		cookies.put(ESSE3, esse3.getCookieStore().getCookies());
+		cookies.put(SSOL, ssol.getCookieStore().getCookies());
 		Log.i(TAG, "Login OK");
+	}
+
+	public List<Cookie> getSSOLCookies() {
+		return cookies.get(SSOL);
+	}
+
+	public List<Cookie> getESSE3Cookies() {
+		return cookies.get(ESSE3);
 	}
 
 	public String getSSOLLoginHTML() {
 		return ssol_login_HTML;
 	}
 
-	public String connection(int type, String url) {
+	public String connection(int type, String url,
+			HashMap<String, String> params) {
 		Log.i(TAG, "Connessione URL: " + url);
 		String page_HTML = null;
 		try {
@@ -101,13 +120,19 @@ public class ConnectionManager {
 			switch (type) {
 			case ESSE3:
 				if (Utils.isLink(url))
-					esse3Conn.get(url);
+					if (params != null)
+						esse3Conn.post(url, params);
+					else
+						esse3Conn.get(url);
 				page_HTML = Utils.inputStreamToString(esse3Conn.getEntity()
 						.getContent());
 				break;
 			case SSOL:
 				if (Utils.isLink(url))
-					ssolConn.get(url);
+					if (params != null)
+						ssolConn.post(url, params);
+					else
+						ssolConn.get(url);
 				page_HTML = Utils.inputStreamToString(ssolConn.getEntity()
 						.getContent());
 				break;

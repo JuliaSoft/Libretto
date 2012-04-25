@@ -209,9 +209,9 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 	}
 
 	private void retriveData(String page_HTML) {
-		if (page_HTML == null) {
+		if (page_HTML == null) 
 			return;
-		}
+		
 
 		// Ricavo le informazioni degli appelli di ogni singolo esame a cui lo
 		// studente si pu� iscrivere
@@ -228,17 +228,6 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 				if (!maps.get(i).containsKey(key))
 					maps.get(i).put(key, value);
 			}
-		}
-	}
-
-	private String connect(String url) {
-		cm.getSsolConnection().get(url);
-		try {
-			return Utils.inputStreamToString(cm.getSsolConnection().getEntity()
-					.getContent());
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return "";
 		}
 	}
 
@@ -301,9 +290,9 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 		protected Void doInBackground(String... params) {
 			if (params != null && params.length > 0) {
 				if (connect) {
-					page_data = connect(params[0]);
+					page_data = cm.connection(ConnectionManager.SSOL, params[0], null);
 				} else {
-					String page_HTML = connect(params[0]);
+					String page_HTML = cm.connection(ConnectionManager.SSOL, params[0], null);
 					retriveData(page_HTML);
 				}
 			}
