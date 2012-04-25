@@ -84,14 +84,13 @@ public class ConnectionManager {
 
 		try {
 			ssol_login_HTML = Utils.inputStreamToString(ssolConn.getEntity().getContent());
+		} catch (IOException e) {
 		}
-		catch (IOException e) {}
 
 		if (ssol_login_HTML.contains("Content_Chiaro Warning"))
 			throw new LoginException(HttpConnection.HTTP_UNAUTHORIZED_EXCEPTION);
 
 		isLogged = true;
-		Log.i(TAG, "Login OK");
 		// After Login save cookies
 		cookies.put(ESSE3, esse3Conn.getCookies());
 		cookies.put(SSOL, ssolConn.getCookies());
@@ -120,12 +119,11 @@ public class ConnectionManager {
 
 			switch (type) {
 			case ESSE3:
-				return getHTML(esse3Conn, url);
+				return getHTML(esse3Conn, url, params);
 			case SSOL:
-				return getHTML(ssolConn, url);
+				return getHTML(ssolConn, url, params);
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			isLogged = false;
 			Log.e(TAG, "Error connection(..): " + e.getMessage());
 		}
@@ -133,9 +131,14 @@ public class ConnectionManager {
 		return null;
 	}
 
-	private String getHTML(HttpConnection connection, String url) throws ConnectException, IllegalStateException, LoginException, IOException {
+	private String getHTML(HttpConnection connection, String url,
+			HashMap<String, String> params) throws ConnectException,
+			IllegalStateException, LoginException, IOException {
 		if (Utils.isLink(url))
-			connection.get(url);
+			if (params != null)
+				connection.post(url, params);
+			else
+				connection.get(url);
 
 		return Utils.inputStreamToString(connection.getEntity().getContent());
 	}
