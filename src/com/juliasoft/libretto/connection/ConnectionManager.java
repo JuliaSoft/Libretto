@@ -47,17 +47,19 @@ public class ConnectionManager {
 	}
 
 	public static ConnectionManager getInstance() {
-		if (instance == null)
+		if (instance == null) {
 			instance = new ConnectionManager();
+			Log.i("INFO", "Start new ClientManager!");
+		}
+
 		return instance;
 	}
 
 	public static KeyStore getTrustStore(String url, int port)
 			throws KeyManagementException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException, IOException {
-		if (trustStore == null) {
+		if (trustStore == null)
 			trustStore = new InstallCert(url, port).getUpdatedTrustStore();
-		}
 
 		return trustStore;
 	}
@@ -67,32 +69,32 @@ public class ConnectionManager {
 		isLogged = false;
 
 		// Login presso univr.esse3.cineca.it
-		Esse3HttpClient esse3 = new Esse3HttpClient(username, password);
-		esse3Conn = new HttpConnection(esse3);
+		esse3Conn = new HttpConnection(new Esse3HttpClient(username, password));
 		esse3Conn.get(Esse3HttpClient.AUTH_URI);
 		esse3Conn.getEntity();
 		esse3Conn.consumeContent();
 
 		// Login presso www.ssol.univr.it
-		SsolHttpClient ssol = new SsolHttpClient();
-		ssolConn = new HttpConnection(ssol);
+		ssolConn = new HttpConnection(new SsolHttpClient());
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("username", username);
 		params.put("password", password);
 		ssolConn.post(SsolHttpClient.AUTH_URI + "main?ent=login", params);
 		ssolConn.getEntity();
+
 		try {
-			ssol_login_HTML = Utils.inputStreamToString(ssolConn.getEntity()
-					.getContent());
-			if (ssol_login_HTML.contains("Content_Chiaro Warning"))
-				throw new LoginException(
-						HttpConnection.HTTP_UNAUTHORIZED_EXCEPTION);
-		} catch (IOException e) {
+			ssol_login_HTML = Utils.inputStreamToString(ssolConn.getEntity().getContent());
 		}
+		catch (IOException e) {}
+
+		if (ssol_login_HTML.contains("Content_Chiaro Warning"))
+			throw new LoginException(HttpConnection.HTTP_UNAUTHORIZED_EXCEPTION);
+
 		isLogged = true;
+		Log.i(TAG, "Login OK");
 		// After Login save cookies
-		cookies.put(ESSE3, esse3.getCookieStore().getCookies());
-		cookies.put(SSOL, ssol.getCookieStore().getCookies());
+		cookies.put(ESSE3, esse3Conn.getCookies());
+		cookies.put(SSOL, ssolConn.getCookies());
 		Log.i(TAG, "Login OK");
 	}
 
@@ -111,55 +113,41 @@ public class ConnectionManager {
 	public String connection(int type, String url,
 			HashMap<String, String> params) {
 		Log.i(TAG, "Connessione URL: " + url);
-		String page_HTML = null;
-		try {
 
+		try {
 			if (!isLogged)
 				authenticate();
 
 			switch (type) {
 			case ESSE3:
-				if (Utils.isLink(url))
-					if (params != null)
-						esse3Conn.post(url, params);
-					else
-						esse3Conn.get(url);
-				page_HTML = Utils.inputStreamToString(esse3Conn.getEntity()
-						.getContent());
-				break;
+				return getHTML(esse3Conn, url);
 			case SSOL:
-				if (Utils.isLink(url))
-					if (params != null)
-						ssolConn.post(url, params);
-					else
-						ssolConn.get(url);
-				page_HTML = Utils.inputStreamToString(ssolConn.getEntity()
-						.getContent());
-				break;
+				return getHTML(ssolConn, url);
 			}
-
-		} catch (LoginException e) {
-			isLogged = false;
-			Log.e(TAG, "Error connection(..): " + e.getMessage());
-		} catch (ConnectException e) {
-			isLogged = false;
-			Log.e(TAG, "Error connection(..): " + e.getMessage());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			isLogged = false;
 			Log.e(TAG, "Error connection(..): " + e.getMessage());
 		}
-		return page_HTML;
+
+		return null;
+	}
+
+	private String getHTML(HttpConnection connection, String url) throws ConnectException, IllegalStateException, LoginException, IOException {
+		if (Utils.isLink(url))
+			connection.get(url);
+
+		return Utils.inputStreamToString(connection.getEntity().getContent());
 	}
 
 	public void reset() {
 		isLogged = false;
 
-		if (ssolConn != null) {
+		if (ssolConn != null)
 			ssolConn.reset();
-		}
-		if (esse3Conn != null) {
+
+		if (esse3Conn != null)
 			esse3Conn.reset();
-		}
 
 		instance = null;
 	}
@@ -192,5 +180,4 @@ public class ConnectionManager {
 	public boolean isLogged() {
 		return isLogged;
 	}
-
 }

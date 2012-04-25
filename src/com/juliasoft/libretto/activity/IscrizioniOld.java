@@ -20,10 +20,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.Spinner;
 
-public class IscrizioniOld extends Activity implements OnClickListener {
+public class IscrizioniOld extends Activity {
 
 	private static final String TAG = IscrizioniOld.class.getName();
 
@@ -48,7 +47,6 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 	private Spinner corso;
 	private Spinner insegnamento;
 	private Spinner docente;
-	private Button ok;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -79,23 +77,28 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 		corso = (Spinner) findViewById(R.id.corso);
 		insegnamento = (Spinner) findViewById(R.id.insegnamento);
 		docente = (Spinner) findViewById(R.id.docente);
-		ok = (Button) findViewById(R.id.mostra_appelli);
-		ok.setOnClickListener(this);
+		findViewById(R.id.mostra_appelli).setOnClickListener(new OnClickListener() {
 
-		adapterFacolta = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item);
-		adapterFacolta
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			@Override
+			public void onClick(View v) {
+				if (!currentCorso.equals("") && !currentInsegn.equals("")) {
+					String url = Utils.TARGET_ISCRIZIONI_OLD + "&id_facolta="
+							+ currentFacolta + "&id_corso=" + currentCorso
+							+ "&id_insegn=" + currentInsegn + "&id_docente="
+							+ currentDocente;
+					new MyAsyncTask(true).execute(url);
+				}
+			}
+		});
+
+		adapterFacolta = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+		adapterFacolta.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		facolta.setAdapter(adapterFacolta);
-		adapterCorsi = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item);
-		adapterCorsi
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		adapterCorsi = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+		adapterCorsi.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		corso.setAdapter(adapterCorsi);
-		adapterInsegn = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item);
-		adapterInsegn
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		adapterInsegn = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+		adapterInsegn.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		insegnamento.setAdapter(adapterInsegn);
 		adapterDocenti = new ArrayAdapter<String>(this,
 				android.R.layout.simple_spinner_item);
@@ -110,13 +113,12 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 		adapters.add(adapterDocenti);
 
 		facolta.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int pos, long id) {
+			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
 				String key = (String) parent.getItemAtPosition(pos);
 				String num = facoltaMap.get(key);
-				if (currentFacolta.equals(num)) {
+				if (currentFacolta.equals(num))
 					return;
-				}
+
 				currentFacolta = num;
 				startIndex = 1;
 				new MyAsyncTask(false).execute(Utils.TARGET_ISCRIZIONI_OLD
@@ -127,14 +129,12 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 			}
 		});
 		corso.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int pos, long id) {
+			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
 				String key = (String) parent.getItemAtPosition(pos);
 				String num = corsoMap.get(key);
-				if (currentCorso.equals(num)) {
+				if (currentCorso.equals(num))
 					return;
-				}
+
 				currentCorso = num;
 				startIndex = 2;
 				new MyAsyncTask(false).execute(Utils.TARGET_ISCRIZIONI_OLD
@@ -145,37 +145,33 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 			public void onNothingSelected(AdapterView<?> parent) {
 			}
 		});
-		insegnamento
-				.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-					public void onItemSelected(AdapterView<?> parent,
-							View view, int pos, long id) {
-						String key = (String) parent.getItemAtPosition(pos);
-						String num = insegnMap.get(key);
-						if (currentInsegn.equals(num)) {
-							return;
-						}
-						currentInsegn = num;
-					}
-
-					public void onNothingSelected(AdapterView<?> parent) {
-					}
-				});
-		docente.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int pos, long id) {
+		insegnamento.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
 				String key = (String) parent.getItemAtPosition(pos);
-				String num = docMap.get(key);
-				if (currentDocente.equals(num)) {
+				String num = insegnMap.get(key);
+				if (currentInsegn.equals(num))
 					return;
-				}
-				currentDocente = num;
+
+				currentInsegn = num;
 			}
 
 			public void onNothingSelected(AdapterView<?> parent) {
 			}
 		});
+		docente.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+				String key = (String) parent.getItemAtPosition(pos);
+				String num = docMap.get(key);
+				if (currentDocente.equals(num))
+					return;
 
-		retriveData(page_HTML);
+				currentDocente = num;
+			}
+
+			public void onNothingSelected(AdapterView<?> parent) {}
+		});
+
+		retrieveData(page_HTML);
 	}
 
 	private void reset() {
@@ -184,23 +180,17 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 		if (startIndex == 1) {
 			// reset item corsi
 			adapterCorsi.clear();
-			adapterCorsi = new ArrayAdapter<String>(this,
-					android.R.layout.simple_spinner_item);
-			adapterCorsi
-					.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			adapterCorsi = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+			adapterCorsi.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		}
 		adapterInsegn.clear();
 		adapterDocenti.clear();
 		// reset item insegnamenti
-		adapterInsegn = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item);
-		adapterInsegn
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		adapterInsegn = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+		adapterInsegn.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 		// reset item docenti
-		adapterDocenti = new ArrayAdapter<String>(this,
-				android.R.layout.simple_spinner_item);
-		adapterDocenti
-				.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		adapterDocenti = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item);
+		adapterDocenti.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
 		adapters.add(adapterFacolta);
 		adapters.add(adapterCorsi);
@@ -208,50 +198,39 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 		adapters.add(adapterDocenti);
 	}
 
-	private void retriveData(String page_HTML) {
-		if (page_HTML == null) 
-			return;
-		
-
-		// Ricavo le informazioni degli appelli di ogni singolo esame a cui lo
-		// studente si pu� iscrivere
-		Elements selects = Utils.jsoupSelect(page_HTML, "select.TopTabText");
-
-		for (int i = startIndex; i < selects.size(); i++) {
-			Element select = selects.get(i);
-			Elements options = select.select("option");
-			for (Element option : options) {
-				String key = option.text();
-				String value = (option.attr("value").equals("-1") ? "" : option
-						.attr("value"));
-				adapters.get(i).add(key);
-				if (!maps.get(i).containsKey(key))
-					maps.get(i).put(key, value);
+	private void retrieveData(String page_HTML) {
+		if (page_HTML != null) {
+			// Ricavo le informazioni degli appelli di ogni singolo esame a cui lo
+			// studente si pu� iscrivere
+			Elements selects = Utils.jsoupSelect(page_HTML, "select.TopTabText");
+	
+			for (int i = startIndex; i < selects.size(); i++) {
+				Elements options = selects.get(i).select("option");
+				for (Element option : options) {
+					String key = option.text();
+					String value = (option.attr("value").equals("-1") ? "" : option.attr("value"));
+					adapters.get(i).add(key);
+					if (!maps.get(i).containsKey(key))
+						maps.get(i).put(key, value);
+				}
 			}
 		}
 	}
 
-	@Override
-	public void onClick(View v) {
-		if (v == ok) {
-			if (currentCorso.equals("")) {
-				return;
-			}
-			if (currentInsegn.equals("")) {
-				return;
-			}
-			String url = Utils.TARGET_ISCRIZIONI_OLD + "&id_facolta="
-					+ currentFacolta + "&id_corso=" + currentCorso
-					+ "&id_insegn=" + currentInsegn + "&id_docente="
-					+ currentDocente;
-			new MyAsyncTask(true).execute(url);
+	private String connect(String url) {
+		cm.getSsolConnection().get(url);
+		try {
+			return Utils.inputStreamToString(cm.getSsolConnection().getEntity().getContent());
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+			return "";
 		}
 	}
 
 	public class MyAsyncTask extends AsyncTask<String, Void, Void> {
 
 		private ProgressDialog progressDialog;
-		private boolean connect;
+		private final boolean connect;
 
 		public MyAsyncTask(boolean connect) {
 			this.connect = connect;
@@ -259,27 +238,24 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 
 		@Override
 		protected void onPreExecute() {
-			progressDialog = ProgressDialog.show(IscrizioniOld.this,
-					"Please wait...", "Loading data ...", true);
-			if (!connect) {
+			progressDialog = ProgressDialog.show(IscrizioniOld.this, "Please wait...", "Loading data ...", true);
+			if (!connect)
 				reset();
-			}
 		}
 
 		@Override
 		protected void onPostExecute(Void result) {
 			if (connect) {
-				Intent intent = new Intent(getApplicationContext(),
-						Iscrizioni.class);
+				Intent intent = new Intent(getApplicationContext(), Iscrizioni.class);
 				String pkg = getPackageName();
 				// setto i dati ricavati dal login
 				intent.putExtra(pkg + ".iscriz", page_data);
 				intent.putExtra(pkg + ".type", "OLD");
 				startActivity(intent);
 			} else {
-				if (startIndex == 1) {
+				if (startIndex == 1)
 					corso.setAdapter(adapterCorsi);
-				}
+
 				insegnamento.setAdapter(adapterInsegn);
 				docente.setAdapter(adapterDocenti);
 			}
@@ -288,14 +264,11 @@ public class IscrizioniOld extends Activity implements OnClickListener {
 
 		@Override
 		protected Void doInBackground(String... params) {
-			if (params != null && params.length > 0) {
-				if (connect) {
-					page_data = cm.connection(ConnectionManager.SSOL, params[0], null);
-				} else {
-					String page_HTML = cm.connection(ConnectionManager.SSOL, params[0], null);
-					retriveData(page_HTML);
-				}
-			}
+			if (params != null && params.length > 0)
+				if (connect)
+					page_data = connect(params[0]);
+				else
+					retrieveData(connect(params[0]));
 			return null;
 		}
 	}

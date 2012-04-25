@@ -236,7 +236,14 @@ public class Login extends Activity {
 
 	// visualizza un menu con le matricole dell'utente(triennale, specialistica...)
 	private void selectID(String page_HTML) {
-		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID);
+		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID, new IDContextMenu.IconContextMenuOnClickListener() {
+
+			@Override
+			public void onClick(final String url) {
+				new LoginTask().execute(url);
+			}
+		});
+
 		Resources res = getResources();
 
 		for (Element tr : Utils.jsoupSelect(page_HTML, "table.detail_table").select("tr")) {
@@ -247,14 +254,6 @@ public class Login extends Activity {
 				iconContextMenu.addItem(res, id, R.drawable.forward_arrow, url);
 			}
 		}
-
-		iconContextMenu.setOnClickListener(new IDContextMenu.IconContextMenuOnClickListener() {
-
-			@Override
-			public void onClick(final String url) {
-				new LoginTask().execute(url);
-			}
-		});
 
 		loginHandler.sendEmptyMessage(SHOW_DIALOG);
 	}
@@ -323,16 +322,13 @@ public class Login extends Activity {
 			dialog = new ProgressDialog(Login.this);
 			dialog.setTitle("Please wait...");
 			dialog.setCancelable(true);
+			cm = ConnectionManager.getInstance();
 		}
 
 		@Override
 		protected void onPreExecute() {
 			dialog.setMessage("Loading data ...");
 			dialog.show();
-			if (cm == null) {
-				cm = ConnectionManager.getInstance();
-				Log.i("INFO", "Start new ClientManager!");
-			}
 		}
 
 		@Override
@@ -348,7 +344,8 @@ public class Login extends Activity {
 		protected Boolean doInBackground(final String... params) {
 			if (params != null && params.length > 0)
 				return initPage(params[0]);
-			else if (!cm.isLogged())
+
+			if (!cm.isLogged())
 				login();
 
 			return cm.isLogged() ? initPage(Utils.TARGET_LIBRETTO) : false;

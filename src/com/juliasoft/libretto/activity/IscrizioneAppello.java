@@ -124,9 +124,8 @@ public class IscrizioneAppello extends ExpandableListActivity {
 				url = form.attr("action");
 				Elements inputs = form.select("input");
 
-				for (Element input : inputs) {
+				for (Element input : inputs)
 					esame.addParam(input.attr("name"), input.attr("value"));
-				}
 
 				Elements trs = form.select("table").select("tr");
 				String action = esame.getParam("azione");
@@ -135,9 +134,9 @@ public class IscrizioneAppello extends ExpandableListActivity {
 					esame.setRegister(false);
 					esame.clearTypes();
 					Elements options = form.select("select>option");
-					for (Element option : options) {
+					for (Element option : options)
 						esame.addType(option.text());
-					}
+
 					Elements tds = trs.get(0).select("td.Content_Chiaro");
 					esame.setData(tds.get(0).text());
 					String iscrtt = tds.get(1).text();

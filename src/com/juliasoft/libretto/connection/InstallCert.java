@@ -2,6 +2,7 @@ package com.juliasoft.libretto.connection;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,7 +22,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
-import com.juliasoft.libretto.utils.Utils;
 import android.os.Environment;
 import android.util.Log;
 
@@ -43,7 +43,7 @@ public class InstallCert {
 			NoSuchAlgorithmException, CertificateException, IOException,
 			KeyManagementException {
 
-		KeyStore trustStore = Utils.loadTrustFile();
+		KeyStore trustStore = loadTrustFile();
 
 		SSLContext context = SSLContext.getInstance("TLS");
 		TrustManagerFactory tmf = TrustManagerFactory
@@ -108,6 +108,29 @@ public class InstallCert {
 			}
 		}
 
+		return trustStore;
+	}
+
+	public static KeyStore loadTrustFile() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+		File file = new File(Environment.getExternalStorageDirectory(), "univr.esse3.cineca.it");
+		KeyStore trustStore = KeyStore.getInstance("BKS");
+		
+		FileInputStream instream = null;
+		try {
+			instream = new FileInputStream(file);
+			trustStore.load(instream, "changeit".toCharArray());
+		} catch (Exception e) {
+			Log.i(TAG, "Trustore inesistente.");
+			trustStore.load(null);
+		} finally {
+			if (instream != null) {
+				try {
+					instream.close();
+				} catch (IOException e) {
+					Log.e(TAG, "Error loadTrustFile(): Chiusura file non riuscita!");
+				}
+			}
+		}
 		return trustStore;
 	}
 

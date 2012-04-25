@@ -8,7 +8,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
-import android.content.res.Resources.Theme;
 import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 import android.view.View;
@@ -18,8 +17,7 @@ import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-public class IDContextMenu implements DialogInterface.OnCancelListener,
-		DialogInterface.OnDismissListener {
+public class IDContextMenu implements DialogInterface.OnCancelListener, DialogInterface.OnDismissListener {
 
 	/**
 	 * menu-like list item with icon
@@ -41,37 +39,9 @@ public class IDContextMenu implements DialogInterface.OnCancelListener,
 		 * @param actionTag
 		 *            indicate action of menu item
 		 */
-		public IconContextMenuItem(Resources res, CharSequence title,
-				int imageResourceId, String actionTag) {
+		public IconContextMenuItem(Resources res, CharSequence title, int imageResourceId, String actionTag) {
 			text = title;
-			if (imageResourceId != -1) {
-				image = res.getDrawable(imageResourceId);
-			} else {
-				image = null;
-			}
-			this.actionTag = actionTag;
-		}
-
-		/**
-		 * public constructor
-		 * 
-		 * @param res
-		 *            resource handler
-		 * @param textResourceId
-		 *            id of title in resource
-		 * @param imageResourceId
-		 *            id of icon in resource
-		 * @param actionTag
-		 *            indicate action of menu item
-		 */
-		public IconContextMenuItem(Resources res, int textResourceId,
-				int imageResourceId, String actionTag) {
-			text = res.getString(textResourceId);
-			if (imageResourceId != -1) {
-				image = res.getDrawable(imageResourceId);
-			} else {
-				image = null;
-			}
+			image = imageResourceId != -1 ? res.getDrawable(imageResourceId) : null;
 			this.actionTag = actionTag;
 		}
 	}
@@ -87,9 +57,8 @@ public class IDContextMenu implements DialogInterface.OnCancelListener,
 	 * Menu-like list adapter with icon
 	 */
 	protected class IconMenuAdapter extends BaseAdapter {
-		private Context context = null;
-
-		private ArrayList<IconContextMenuItem> mItems = new ArrayList<IconContextMenuItem>();
+		private final Context context;
+		private final ArrayList<IconContextMenuItem> mItems = new ArrayList<IconContextMenuItem>();
 
 		public IconMenuAdapter(Context context) {
 			this.context = context;
@@ -123,84 +92,63 @@ public class IDContextMenu implements DialogInterface.OnCancelListener,
 		public View getView(int position, View convertView, ViewGroup parent) {
 			IconContextMenuItem item = (IconContextMenuItem) getItem(position);
 
-			Resources res = parentActivity.getResources();
-
-			if (convertView == null) {
-				TextView temp = new TextView(context);
+			TextView textView = (TextView) convertView;
+			if (textView == null) {
+				Resources res = parentActivity.getResources();
+				textView = new TextView(context);
 				AbsListView.LayoutParams param = new AbsListView.LayoutParams(
 						LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT);
-				temp.setLayoutParams(param);
-				temp.setPadding((int) toPixel(res, 15), 0,
-						(int) toPixel(res, 15), 0);
-				temp.setGravity(android.view.Gravity.CENTER_VERTICAL);
+				textView.setLayoutParams(param);
+				textView.setPadding((int) toPixel(res, 15), 0, (int) toPixel(res, 15), 0);
+				textView.setGravity(android.view.Gravity.CENTER_VERTICAL);
 
-				Theme th = context.getTheme();
 				TypedValue tv = new TypedValue();
+				if (context.getTheme().resolveAttribute(android.R.attr.textAppearanceLargeInverse, tv, true))
+					textView.setTextAppearance(context, tv.resourceId);
 
-				if (th.resolveAttribute(
-						android.R.attr.textAppearanceLargeInverse, tv, true)) {
-					temp.setTextAppearance(context, tv.resourceId);
-				}
-
-				temp.setMinHeight(LIST_PREFERED_HEIGHT);
-				temp.setCompoundDrawablePadding((int) toPixel(res, 14));
-				convertView = temp;
+				textView.setMinHeight(LIST_PREFERED_HEIGHT);
+				textView.setCompoundDrawablePadding((int) toPixel(res, 14));
 			}
 
-			TextView textView = (TextView) convertView;
 			textView.setTag(item);
 			textView.setText(item.text);
-			textView.setCompoundDrawablesWithIntrinsicBounds(item.image, null,
-					null, null);
+			textView.setCompoundDrawablesWithIntrinsicBounds(item.image, null, null, null);
 
 			return textView;
 		}
 
 		private float toPixel(Resources res, int dip) {
-			float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-					dip, res.getDisplayMetrics());
-			return px;
+			return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, res.getDisplayMetrics());
 		}
 	}
 
 	private static final int LIST_PREFERED_HEIGHT = 65;
 
-	private IconMenuAdapter menuAdapter = null;
+	private final IconMenuAdapter menuAdapter;
 
-	private Activity parentActivity = null;
+	private final Activity parentActivity;
 
-	private int dialogId = 0;
+	private final int dialogId;
 
-	private IconContextMenuOnClickListener clickHandler = null;
+	private final IconContextMenuOnClickListener clickHandler;
 
 	/**
 	 * constructor
 	 * 
 	 * @param parent
 	 * @param id
+	 * @param listener the on click listener
 	 */
-	public IDContextMenu(Activity parent, int id) {
+
+	public IDContextMenu(Activity parent, int id, IconContextMenuOnClickListener listener) {
 		this.parentActivity = parent;
 		this.dialogId = id;
-
-		menuAdapter = new IconMenuAdapter(parentActivity);
+		this.clickHandler = listener;
+		this.menuAdapter = new IconMenuAdapter(parentActivity);
 	}
 
-	/**
-	 * Add menu item
-	 * 
-	 * @param menuItem
-	 */
-	public void addItem(Resources res, CharSequence title, int imageResourceId,
-			String actionTag) {
-		menuAdapter.addItem(new IconContextMenuItem(res, title,
-				imageResourceId, actionTag));
-	}
-
-	public void addItem(Resources res, String string, int imageResourceId,
-			String actionTag) {
-		menuAdapter.addItem(new IconContextMenuItem(res, string,
-				imageResourceId, actionTag));
+	public void addItem(Resources res, String string, int imageResourceId, String actionTag) {
+		menuAdapter.addItem(new IconContextMenuItem(res, string, imageResourceId, actionTag));
 	}
 
 	private void cleanup() {
@@ -213,19 +161,14 @@ public class IDContextMenu implements DialogInterface.OnCancelListener,
 	 * @return
 	 */
 	public Dialog createMenu(String menuItitle) {
-		final AlertDialog.Builder builder = new AlertDialog.Builder(
-				parentActivity);
+		AlertDialog.Builder builder = new AlertDialog.Builder(parentActivity);
 		builder.setTitle(menuItitle);
 		builder.setAdapter(menuAdapter, new DialogInterface.OnClickListener() {
 
 			@Override
 			public void onClick(DialogInterface dialoginterface, int i) {
-				IconContextMenuItem item = (IconContextMenuItem) menuAdapter
-						.getItem(i);
-
-				if (clickHandler != null) {
-					clickHandler.onClick(item.actionTag);
-				}
+				if (clickHandler != null)
+					clickHandler.onClick(((IconContextMenuItem) menuAdapter.getItem(i)).actionTag);
 			}
 		});
 
@@ -243,16 +186,5 @@ public class IDContextMenu implements DialogInterface.OnCancelListener,
 	}
 
 	@Override
-	public void onDismiss(DialogInterface dialog) {
-
-	}
-
-	/**
-	 * Set menu onclick listener
-	 * 
-	 * @param listener
-	 */
-	public void setOnClickListener(IconContextMenuOnClickListener listener) {
-		clickHandler = listener;
-	}
+	public void onDismiss(DialogInterface dialog) {}
 }

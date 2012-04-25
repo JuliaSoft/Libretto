@@ -89,6 +89,7 @@ public class TabBar extends TabActivity {
 				+ "Non essendo note delle API per il sistema ESSE3, il recupero delle informazioni dalla "
 				+ "pagina HTML avviene tramite un parser basato sulla libreria Jsoup (http://jsoup.org), "
 				+ "il che potrà comprometterne in futuro il funzionamento. "
+				+ "Il logo dell'applicazione è stato gentilmente fornito da Logogratis (http://www.logogratis.net). "
 				+ "Questo software è stato sviluppato da Davide Vallicella per Julia Srl (http://www.juliasoft.com).";
 
 		TextView text = new TextView(this);

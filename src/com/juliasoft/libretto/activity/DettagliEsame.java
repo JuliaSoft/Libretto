@@ -1,5 +1,7 @@
 package com.juliasoft.libretto.activity;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.ConnectException;
 
 import javax.security.auth.login.LoginException;
@@ -11,7 +13,10 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -20,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class DettagliEsame extends Activity {
+	public static final String TAG = DettagliEsame.class.getName();
 	private static final int CONNECTION_ERROR = 1;
 	private static final int LOGIN_ERROR = 2;
 	private AlertDialog builder;
@@ -101,8 +107,32 @@ public class DettagliEsame extends Activity {
 				}
 			}
 			if (cm.isLogged())
-				img.setImageBitmap(Utils.downloadBitmap(_img));
+				img.setImageBitmap(downloadBitmap(_img));
 		}
+	}
+
+	private static Bitmap downloadBitmap(String fileUrl) {
+		ConnectionManager cm = ConnectionManager.getInstance();
+		InputStream is = null;
+
+		if (Utils.isLink(fileUrl)) {
+			try {
+				cm.getEsse3Connection().get(fileUrl);
+				is = cm.getEsse3Connection().getEntity().getContent();
+				return BitmapFactory.decodeStream(is);
+			} catch (Exception e) {
+				Log.e(TAG, "Error downloadBitmap(): Download immagine non riuscito!");
+			} finally {
+				if (is != null) {
+					try {
+						is.close();
+					} catch (IOException e) {
+						Log.e(TAG, "Error downloadBitmap(): Chiusura file non riuscita!");
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	private void showMessage(int type, String msg) {
