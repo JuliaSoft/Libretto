@@ -237,7 +237,14 @@ public class Login extends Activity {
 
 	// visualizza un menu con le matricole dell'utente(triennale, specialistica...)
 	private void selectID(String page_HTML) {
-		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID);
+		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID, new IDContextMenu.IconContextMenuOnClickListener() {
+
+			@Override
+			public void onClick(final String url) {
+				new LoginTask().execute(url);
+			}
+		});
+
 		Resources res = getResources();
 
 		for (Element tr : Utils.jsoupSelect(page_HTML, "table.detail_table").select("tr")) {
@@ -248,14 +255,6 @@ public class Login extends Activity {
 				iconContextMenu.addItem(res, id, R.drawable.forward_arrow, url);
 			}
 		}
-
-		iconContextMenu.setOnClickListener(new IDContextMenu.IconContextMenuOnClickListener() {
-
-			@Override
-			public void onClick(final String url) {
-				new LoginTask().execute(url);
-			}
-		});
 
 		loginHandler.sendEmptyMessage(SHOW_DIALOG);
 	}
