@@ -41,6 +41,7 @@ public class Questionario extends Activity {
 	private String questionario_HTML;
 	public boolean update = true;
 	public boolean loadJS = false;
+	public boolean javascriptInterfaceBroken = false;
 
 	private WebView webView;
 	private ViewSwitcher vs;
@@ -55,14 +56,22 @@ public class Questionario extends Activity {
 
 	private void init() {
 		cm = ConnectionManager.getInstance();
-		
+
+		// Determine if JavaScript interface is broken.
+		// For now, until we have further clarification from the Android team,
+		// use version number.
+
+		if ("2.3".equals(Build.VERSION.RELEASE)) {
+			javascriptInterfaceBroken = true;
+		}
+
 		webView = (WebView) findViewById(R.id.sito);
 		vs = ((ViewSwitcher) findViewById(R.id.view_switcher));
 		vs.showNext(); // Visualizzo il browser
 
 		dialog = new ProgressDialog(Questionario.this);
 		dialog.setCancelable(true);
-		
+
 		setUpWebView();
 		loadSSOLCookies();
 		Intent intent = getIntent();
@@ -76,17 +85,20 @@ public class Questionario extends Activity {
 		webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
 		webSettings.setSupportMultipleWindows(false);
 		webSettings.setSupportZoom(true);
-		webSettings.setPluginsEnabled(true);
 		webSettings.setDefaultTextEncodingName("utf-8");
 
 		webView.setWebViewClient(new MyWebViewClient());
 		webView.requestFocus(View.FOCUS_DOWN);
-		webView.addJavascriptInterface(new QuestionarioJSInterface(), "droid");
+
+		// Add javascript interface only if it's not broken
+		if (!javascriptInterfaceBroken) {
+			webView.addJavascriptInterface(new QuestionarioJSInterface(), "droid");
+		}
 
 		webView.setWebChromeClient(new WebChromeClient() {
 			@Override
 			public void onProgressChanged(WebView view, int progress) {
-				Questionario.this.setProgress(progress * 1000);
+				Questionario.this.setProgress(progress * 100);
 			}
 
 			@Override
@@ -179,7 +191,7 @@ public class Questionario extends Activity {
 	}
 
 	class MyWebViewClient extends WebViewClient {
-		
+
 		@Override
 		public void onPageStarted(WebView view, String url, Bitmap favicon) {
 			if (!loadJS) {
@@ -193,7 +205,7 @@ public class Questionario extends Activity {
 		@Override
 		public void onPageFinished(WebView view, String url) {
 			super.onPageFinished(view, url);
-			if (update && Build.VERSION.SDK_INT >= 14) {
+			if (update && !javascriptInterfaceBroken) {
 				dialog.setMessage("load questionnaire ...");
 				loadJS = true;
 				webView.loadUrl("javascript:window.droid.questJS(document.getElementsByTagName('html')[0].innerHTML);");

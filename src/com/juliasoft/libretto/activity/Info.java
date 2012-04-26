@@ -2,8 +2,6 @@ package com.juliasoft.libretto.activity;
 
 import java.util.ArrayList;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -11,7 +9,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -19,12 +16,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
@@ -38,13 +32,12 @@ public class Info extends Activity {
 	public static final String TAG = Info.class.getName();
 
 	private static final int MENU_UPDATE = R.id.info_menu_update;
-	private static final int CONNECTION_ERROR = 0;
-	private static final int INIT = 3;
-	private static final int EDIT = 4;
-	private static final int DIALOG_MESSAGE = 5;
+
+	private static final int INIT = 0;
+	private static final int CONNECTION_ERROR = 1;
+	private static final int DIALOG_MESSAGE = 2;
 
 	private ArrayList<TextView> listView;
-	private ArrayList<EditText> listEdit;
 	private ArrayList<String> listInfo;
 	private AlertDialog builder;
 
@@ -70,21 +63,6 @@ public class Info extends Activity {
 		TextView ordinamento = (TextView) findViewById(R.id.info_ordinamento);
 		TextView normativa = (TextView) findViewById(R.id.info_normativa);
 		TextView dataImmatricolazione = (TextView) findViewById(R.id.info_dataImmatricolazione);
-		
-		LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		View edit_layout = inflater.inflate(R.layout.info_edit, null);
-
-		listEdit = new ArrayList<EditText>();
-		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_nome));
-		listEdit.add((EditText) edit_layout
-				.findViewById(R.id.et_info_matricola));
-		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_tipo));
-		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_profilo));
-		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_anno));
-		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_immat));
-		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_corso));
-		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_ordin));
-		listEdit.add((EditText) edit_layout.findViewById(R.id.et_info_percorso));
 
 		initLoginButton();
 
@@ -127,10 +105,7 @@ public class Info extends Activity {
 	private void retrieveData(String page_HTML) {
 		if (page_HTML != null)
 			try {
-				// elimino stringhe speciali
-				// page_HTML = Utils.removeSpecialString(page_HTML, "&.*?;");
-
-				// recupero la matricola e il nome utente
+				// Recupero la matricola e il nome utente
 
 				Element h1 = Utils.jsoupSelect(page_HTML, "div#header")
 						.select("h1").first();
@@ -141,45 +116,44 @@ public class Info extends Activity {
 					listInfo.add(split[1]);
 				}
 
-				// recupero tutte le informazioni utili dell'utente
+				// Recupero tutte le informazioni utili dell'utente
 				Elements statoStudente = Utils.jsoupSelect(page_HTML,
 						"div#gu-homepagestudente-cp2Child");
 
-				// Anno accademico e stato cariera
+				if (!statoStudente.isEmpty()) {
+					// Anno accademico e stato cariera
 
-				Elements aa_sc = statoStudente.select("p#textStatusStudente>b");
-				for (Element e : aa_sc)
-					listInfo.add(e.text());
+					Elements aa_sc = statoStudente.select("p#textStatusStudente>b");
+					for (Element e : aa_sc)
+						listInfo.add(e.text());
 
-				// Corso, facoltà e percorso
+					// Corso, facoltà e percorso
 
-				Elements cor_fac_per = statoStudente.select("p#textStatusStudenteCorsoFac>b");
-				for (Element e : cor_fac_per)
-					listInfo.add(e.text());
+					Elements cor_fac_per = statoStudente.select("p#textStatusStudenteCorsoFac>b");
+					for (Element e : cor_fac_per)
+						listInfo.add(e.text());
 
-				// Durata e anno di corso
+					// Durata e anno di corso
 
-				Elements dur_adc = statoStudente.select("div#boxStatusStudenteIscriz1>p>b");
-				for (Element e : dur_adc)
-					listInfo.add(e.text());
+					Elements dur_adc = statoStudente.select("div#boxStatusStudenteIscriz1>p>b");
+					for (Element e : dur_adc)
+						listInfo.add(e.text());
 
-				// Ordinamento e Normativa
+					// Ordinamento e Normativa
 
-				Elements ord_norm = statoStudente.select("div#boxStatusStudenteIscriz2>p>b");
-				for (Element e : ord_norm)
-					listInfo.add(e.text());
-				
-				// Data immatricolazione
-				
-				Element data_imm = statoStudente.select("p#textStatusStudenteImma>b").first();
-				listInfo.add(data_imm.text());
-				
-				
+					Elements ord_norm = statoStudente.select("div#boxStatusStudenteIscriz2>p>b");
+					for (Element e : ord_norm)
+						listInfo.add(e.text());
 
-				infoHandler.sendEmptyMessage(INIT);
+					// Data immatricolazione
+
+					Element data_imm = statoStudente.select("p#textStatusStudenteImma>b").first();
+					listInfo.add(data_imm.text());
+
+					infoHandler.sendEmptyMessage(INIT);
+				}
 			} catch (Exception e) {
 				Log.e(TAG, "Retrieving data: " + e.getMessage());
-				e.printStackTrace();
 			}
 	}
 
@@ -215,12 +189,6 @@ public class Info extends Activity {
 				int i = 0;
 				for (TextView tv : listView)
 					tv.setText(listInfo.get(i++));
-				break;
-			}
-			case EDIT: {
-				int i = 0;
-				for (TextView tv : listView)
-					tv.setText(listEdit.get(i++).getText().toString());
 				break;
 			}
 			case CONNECTION_ERROR:
