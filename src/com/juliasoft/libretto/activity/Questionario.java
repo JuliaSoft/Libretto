@@ -59,9 +59,8 @@ public class Questionario extends Activity {
 
 		// Determine if JavaScript interface is broken.
 		// For now, until we have further clarification from the Android team,
-		// use version number.
-
-		if ("2.3".equals(Build.VERSION.RELEASE)) {
+		// use version number
+		if ("2.3".equals(Build.VERSION.RELEASE.substring(0, 3))) {
 			javascriptInterfaceBroken = true;
 		}
 
@@ -91,9 +90,8 @@ public class Questionario extends Activity {
 		webView.requestFocus(View.FOCUS_DOWN);
 
 		// Add javascript interface only if it's not broken
-		if (!javascriptInterfaceBroken) {
+		if (!javascriptInterfaceBroken)
 			webView.addJavascriptInterface(new QuestionarioJSInterface(), "droid");
-		}
 
 		webView.setWebChromeClient(new WebChromeClient() {
 			@Override
