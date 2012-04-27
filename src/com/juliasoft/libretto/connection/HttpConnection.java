@@ -64,16 +64,8 @@ public class HttpConnection implements Runnable {
 		run();
 	}
 
-	public void get(String url, Map<String, String> headers) {
-		create(GET, url, headers, null);
-	}
-
 	public void get(String url) {
 		create(GET, url, null, null);
-	}
-
-	public void post(String url, Map<String, String> headers, Map<String, String> params) {
-		create(POST, url, headers, params);
 	}
 
 	public void post(String url, Map<String, String> params) {

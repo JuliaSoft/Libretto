@@ -150,14 +150,6 @@ public class ConnectionManager {
 		this.password = pass;
 	}
 
-	public String getUsername() {
-		return username;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-
 	public boolean isLogged() {
 		return isLogged;
 	}

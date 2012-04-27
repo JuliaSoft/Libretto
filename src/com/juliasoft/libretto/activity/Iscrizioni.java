@@ -17,19 +17,15 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.Html;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.TextView;
@@ -290,27 +286,6 @@ public class Iscrizioni extends ExpandableListActivity {
 			tv.setTextColor(Color.BLACK);
 			tv.setText(group);
 			return convertView;
-		}
-
-		public TextView getGenericView() {
-			// Layout parameters for the ExpandableListView
-			AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
-					ViewGroup.LayoutParams.MATCH_PARENT, 100);
-
-			TextView textView = new TextView(Iscrizioni.this);
-
-			textView.setLayoutParams(lp);
-			// Center the text vertically
-			textView.setTextColor(Color.BLACK);
-			textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
-			textView.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
-			textView.setMaxLines(2);
-			textView.setMinHeight(45);
-			textView.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
-			// Set the text starting position
-			textView.setPadding(55, 0, 0, 0);
-
-			return textView;
 		}
 
 		@Override

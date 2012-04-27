@@ -1,7 +1,6 @@
 package com.juliasoft.libretto.utils;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,7 +17,6 @@ import org.jsoup.select.Elements;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.os.Environment;
 import android.util.Log;
 
 public class Utils {
@@ -35,8 +33,6 @@ public class Utils {
 			+ "main?ent=ieappellics";
 	public static final String TARGET_ISCRIZIONI_OLD = SsolHttpClient.AUTH_URI
 			+ "main?ent=ieappellics";
-	/** SD FILE **/
-	public static final File SD_CARD = Environment.getExternalStorageDirectory();
 
 	/*
 	 * @return boolean return true if the application can access the internet
