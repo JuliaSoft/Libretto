@@ -5,20 +5,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.connection.SsolHttpClient;
-import com.juliasoft.libretto.utils.Iscrizione;
-import com.juliasoft.libretto.utils.Utils;
-
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
+import android.app.Activity;
 import android.app.ExpandableListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -37,21 +30,30 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.juliasoft.libretto.connection.ConnectionManager;
+import com.juliasoft.libretto.connection.SsolHttpClient;
+import com.juliasoft.libretto.utils.Iscrizione;
+import com.juliasoft.libretto.utils.Utils;
+
 public class IscrizioneAppello extends ExpandableListActivity {
 
 	private static final String TAG = IscrizioneAppello.class.getName();
+
 	private static final int INIT = 0;
+	private static final int SUCCESS = 1;
 	private static final int FAIL = 2;
+	private static final int QUEST = 3;
 
 	private ConnectionManager cm;
 	private ArrayList<String> groupData;
 	private ArrayList<List<Object>> childData;
 	private String url;
+	private String page_HTML;
 	private String page_URL;
+	private boolean loadQuestionario;
 
 	private TextView corso;
 	private TextView esame;
-	private AlertDialog builder;
 	private ArrayAdapter<String> adapter;
 
 	@Override
@@ -64,7 +66,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 	private void init() {
 		Intent intent = getIntent();
 		String pkg = getPackageName();
-		String page_HTML = intent.getStringExtra(pkg + ".iscriz");
+		page_HTML = intent.getStringExtra(pkg + ".iscriz");
 
 		cm = ConnectionManager.getInstance();
 		page_URL = intent.getStringExtra(pkg + ".url");
@@ -75,26 +77,10 @@ public class IscrizioneAppello extends ExpandableListActivity {
 		corso = (TextView) findViewById(R.id.tv_iscr_corso);
 		esame = (TextView) findViewById(R.id.tv_iscr_esame);
 
-		builder = new AlertDialog.Builder(this).setTitle("Login")
-				.setIcon(android.R.drawable.ic_dialog_alert).create();
-		builder.setButton("OK", new DialogInterface.OnClickListener() {
-
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-			}
-
-		});
-
-		retrieveData(page_HTML);
+		retrieveData();
 	}
 
-	private void reset() {
-		groupData.clear();
-		childData.clear();
-	}
-
-	private void retrieveData(String page_HTML) {
+	private void retrieveData() {
 		if (page_HTML == null) {
 			return;
 		}
@@ -199,12 +185,27 @@ public class IscrizioneAppello extends ExpandableListActivity {
 		appelloHandler.sendEmptyMessage(INIT);
 	}
 
+	private void refreshPage() {
+		groupData.clear();
+		childData.clear();
+		page_HTML = cm.connection(ConnectionManager.SSOL, page_URL, null);
+	}
+	
 	@Override
-	protected Dialog onCreateDialog(int id) {
-		if (id == FAIL) {
-			return builder;
-		}
-		return super.onCreateDialog(id);
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// TODO Auto-generated method stub
+		if (requestCode == 1)
+			switch (resultCode) {
+			case Activity.RESULT_OK:
+				appelloHandler.sendEmptyMessage(SUCCESS);
+				break;
+			case Activity.RESULT_CANCELED:
+				appelloHandler.sendEmptyMessage(FAIL);
+				break;
+			default:
+				showDialog(FAIL);
+				break;
+			}
 	}
 
 	private Handler appelloHandler = new Handler() {
@@ -218,35 +219,36 @@ public class IscrizioneAppello extends ExpandableListActivity {
 						IscrizioneAppello.this, groupData, childData);
 				setListAdapter(el);
 				break;
-			// case SUCCESS:
-			// try {
-			// reset();
-			// retriveData(Utils.inputStreamToString(cm
-			// .getSsolConnection().getEntity().getContent()));
-			// } catch (Exception e) {
-			// Log.e(TAG, e.getMessage());
-			// }
-			// progressDialog.dismiss();
-			// break;
-			//
-			// case FAIL:
-			// progressDialog.dismiss();
-			// break;
+			case QUEST:
+				loadQuestionario = true;
+				Intent intent = new Intent(getApplicationContext(),
+						Questionario.class);
+				String pkg = getPackageName();
+				// setto i dati ricavati dal login
+				intent.putExtra(pkg + ".page", page_HTML);
+				startActivityForResult(intent, 1);
+				break;
+			case SUCCESS:
+				try {
+					refreshPage();
+					retrieveData();
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage());
+				}
+				break;
+			case FAIL:
+				try {
+					refreshPage();
+					retrieveData();
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage());
+				}
+				break;
 			default:
 				break;
 			}
 		}
 	};
-
-	private boolean iscrizione(String link, HashMap<String, String> params) {
-		if (Utils.isLink(link)) {
-			cm.getSsolConnection().post(link, params);
-			cm.getSsolConnection().consumeContent();
-			cm.getSsolConnection().get(page_URL);
-			return true;
-		}
-		return false;
-	}
 
 	public class MyExpandableListAdapter extends BaseExpandableListAdapter {
 
@@ -288,8 +290,8 @@ public class IscrizioneAppello extends ExpandableListActivity {
 			if (obj instanceof Iscrizione) {
 				LayoutInflater infalInflater = (LayoutInflater) context
 						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				convertView = infalInflater
-						.inflate(R.layout.iscr_appello_item, null);
+				convertView = infalInflater.inflate(R.layout.iscr_appello_item,
+						null);
 
 				final Iscrizione appello = (Iscrizione) obj;
 
@@ -321,14 +323,14 @@ public class IscrizioneAppello extends ExpandableListActivity {
 				spinner.setAdapter(adapter);
 				if (appello.isRegister())
 					spinner.setEnabled(false);
-				ToggleButton b = (ToggleButton) convertView
+				final ToggleButton b = (ToggleButton) convertView
 						.findViewById(R.id.tb_iscr_ok);
 
-				if (appello.isRegister()) {
+				if (appello.isRegister())
 					b.setChecked(true);
-				} else {
+				else
 					b.setChecked(false);
-				}
+
 				if (appello.isEnable()) {
 					tv.setVisibility(View.INVISIBLE);
 					b.setOnClickListener(new OnClickListener() {
@@ -339,13 +341,13 @@ public class IscrizioneAppello extends ExpandableListActivity {
 							appello.addParam("tipo_iscrizione", spinner
 									.getSelectedItem().toString());
 
-							new MyAsyncTask().execute(appello.getParams());
+							new IscrizioneAsyncTask().execute(appello
+									.getParams());
 						}
 					});
 				} else {
 					ll.setVisibility(View.INVISIBLE);
 					tv.setText("Iscrizioni chiuse");
-
 				}
 			}
 
@@ -421,7 +423,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 
 	}
 
-	public class MyAsyncTask extends
+	public class IscrizioneAsyncTask extends
 			AsyncTask<HashMap<String, String>, Boolean, Boolean> {
 
 		private ProgressDialog progressDialog;
@@ -434,26 +436,35 @@ public class IscrizioneAppello extends ExpandableListActivity {
 
 		@Override
 		protected void onPostExecute(Boolean isSuccess) {
-			if (isSuccess) {
-				try {
-					reset();
-					retrieveData(Utils.inputStreamToString(cm
-							.getSsolConnection().getEntity().getContent()));
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage());
-				}
-			} else {
-				showDialog(FAIL);
-			}
+			if (isSuccess)
+				appelloHandler.sendEmptyMessage(SUCCESS);
+			else if (!loadQuestionario)
+				appelloHandler.sendEmptyMessage(FAIL);
 			progressDialog.dismiss();
 		}
 
 		@Override
 		protected Boolean doInBackground(HashMap<String, String>... params) {
-			if (params != null && params.length > 0) {
+			if (params != null && params.length > 0)
 				return iscrizione(SsolHttpClient.AUTH_URI + url, params[0]);
-			}
+
 			return false;
 		}
+
+		private boolean iscrizione(String link, HashMap<String, String> params) {
+			if (Utils.isLink(link)) {
+				loadQuestionario = false;
+				page_HTML = cm.connection(ConnectionManager.SSOL, link, params);
+				if (page_HTML.contains("Questionario"))
+					appelloHandler.sendEmptyMessage(QUEST);
+				else {
+					refreshPage();
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 	}
 }

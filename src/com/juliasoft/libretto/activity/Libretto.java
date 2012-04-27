@@ -183,7 +183,7 @@ public class Libretto extends ListActivity {
 		if (cm.isLogged()) {
 			try {
 				String page_HTML = cm.connection(ConnectionManager.ESSE3,
-						Utils.TARGET_PIANO_STUDIO);
+						Utils.TARGET_PIANO_STUDIO, null);
 				Elements tables = Utils.jsoupSelect(page_HTML, "table.detail_table");
 
 				for (int i = 0; i < tables.size() - 1; i++) {
@@ -485,7 +485,7 @@ public class Libretto extends ListActivity {
 				showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
 			}
 			else
-				retrieveData(cm.connection(ConnectionManager.ESSE3, Utils.TARGET_LIBRETTO));
+				retrieveData(cm.connection(ConnectionManager.ESSE3, Utils.TARGET_LIBRETTO, null));
 
 			return null;
 		}

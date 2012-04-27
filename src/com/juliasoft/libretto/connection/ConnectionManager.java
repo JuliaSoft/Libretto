@@ -8,12 +8,16 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.security.auth.login.LoginException;
 
-import com.juliasoft.libretto.utils.Utils;
+import org.apache.http.cookie.Cookie;
+
 import android.util.Log;
+
+import com.juliasoft.libretto.utils.Utils;
 
 public class ConnectionManager {
 
@@ -24,6 +28,7 @@ public class ConnectionManager {
 
 	private static ConnectionManager instance;
 	private static KeyStore trustStore;
+	private static Map<Integer, List<Cookie>> cookies;
 
 	private String username;
 	private String password;
@@ -38,6 +43,7 @@ public class ConnectionManager {
 		isLogged = false;
 		username = "";
 		password = "";
+		cookies = new HashMap<Integer, List<Cookie>>();
 	}
 
 	public static ConnectionManager getInstance() {
@@ -78,21 +84,33 @@ public class ConnectionManager {
 
 		try {
 			ssol_login_HTML = Utils.inputStreamToString(ssolConn.getEntity().getContent());
+		} catch (IOException e) {
 		}
-		catch (IOException e) {}
 
 		if (ssol_login_HTML.contains("Content_Chiaro Warning"))
 			throw new LoginException(HttpConnection.HTTP_UNAUTHORIZED_EXCEPTION);
 
 		isLogged = true;
+		// After Login save cookies
+		cookies.put(ESSE3, esse3Conn.getCookies());
+		cookies.put(SSOL, ssolConn.getCookies());
 		Log.i(TAG, "Login OK");
+	}
+
+	public List<Cookie> getSSOLCookies() {
+		return cookies.get(SSOL);
+	}
+
+	public List<Cookie> getESSE3Cookies() {
+		return cookies.get(ESSE3);
 	}
 
 	public String getSSOLLoginHTML() {
 		return ssol_login_HTML;
 	}
 
-	public String connection(int type, String url) {
+	public String connection(int type, String url,
+			HashMap<String, String> params) {
 		Log.i(TAG, "Connessione URL: " + url);
 
 		try {
@@ -101,12 +119,11 @@ public class ConnectionManager {
 
 			switch (type) {
 			case ESSE3:
-				return getHTML(esse3Conn, url);
+				return getHTML(esse3Conn, url, params);
 			case SSOL:
-				return getHTML(ssolConn, url);
+				return getHTML(ssolConn, url, params);
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			isLogged = false;
 			Log.e(TAG, "Error connection(..): " + e.getMessage());
 		}
@@ -114,9 +131,14 @@ public class ConnectionManager {
 		return null;
 	}
 
-	private String getHTML(HttpConnection connection, String url) throws ConnectException, IllegalStateException, LoginException, IOException {
+	private String getHTML(HttpConnection connection, String url,
+			HashMap<String, String> params) throws ConnectException,
+			IllegalStateException, LoginException, IOException {
 		if (Utils.isLink(url))
-			connection.get(url);
+			if (params != null)
+				connection.post(url, params);
+			else
+				connection.get(url);
 
 		return Utils.inputStreamToString(connection.getEntity().getContent());
 	}

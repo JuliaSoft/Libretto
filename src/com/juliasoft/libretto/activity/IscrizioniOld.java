@@ -269,7 +269,6 @@ public class IscrizioniOld extends Activity {
 					page_data = connect(params[0]);
 				else
 					retrieveData(connect(params[0]));
-
 			return null;
 		}
 	}

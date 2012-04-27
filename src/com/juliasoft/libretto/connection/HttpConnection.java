@@ -14,11 +14,11 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
@@ -48,7 +48,7 @@ public class HttpConnection implements Runnable {
 	private Map<String, String> params;
 	private Map<String, String> headers;
 
-	private final HttpClient httpClient;
+	private final DefaultHttpClient httpClient;
 	private HttpResponse response;
 
 	public HttpConnection(DefaultHttpClient httpClient) {
@@ -114,6 +114,10 @@ public class HttpConnection implements Runnable {
 
 			post.setEntity(new UrlEncodedFormEntity(postParams, HTTP.UTF_8));
 		}
+	}
+	
+	public List<Cookie> getCookies() {
+		return httpClient.getCookieStore().getCookies();
 	}
 
 	public void consumeContent() {
