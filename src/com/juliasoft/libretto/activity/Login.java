@@ -14,6 +14,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,6 +30,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -56,6 +58,8 @@ public class Login extends Activity {
 
 	private ConnectionManager cm;
 	private Map<String, String> html_pages;
+	private SharedPreferences loginPreferences;
+	private SharedPreferences.Editor loginPrefsEditor;
 
 	private EditText uname;
 	private EditText pword;
@@ -75,9 +79,14 @@ public class Login extends Activity {
 	private void init() {
 		html_pages = new HashMap<String, String>();
 
-		initUserNameEditTextWithConstraints();
-		initPasswordEditText();
-		initRememberPassword();
+		loginPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+		loginPrefsEditor = loginPreferences.edit();
+		Boolean saveLogin = loginPreferences.getBoolean(PREF_REMEMBER, false);
+
+		initUserNameEditTextWithConstraints(saveLogin);
+		initPasswordEditText(saveLogin);
+		initRememberPassword(saveLogin);
+
 		makeLoginPasswordRequired();
 		setLinkToJuliaSrl();
 
@@ -96,22 +105,25 @@ public class Login extends Activity {
 		lp.dimAmount = 0.5f;
 
 		builder.getWindow().setAttributes(lp);
-		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		builder.getWindow().addFlags(
+				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 	}
 
-	private void initRememberPassword() {
+	private void initRememberPassword(boolean saveLogin) {
 		remeb = (CheckBox) findViewById(R.id.id_remember_up);
-		remeb.setChecked((Boolean) loadCredentials(PREF_REMEMBER));
+		remeb.setChecked(saveLogin);
 	}
 
-	private void initPasswordEditText() {
+	private void initPasswordEditText(boolean saveUser) {
 		pword = (EditText) findViewById(R.id.password);
-		pword.setText((CharSequence) loadCredentials(PREF_PASSWORD));
+		// pword.setText((CharSequence) loadCredentials(PREF_PASSWORD));
+		if (saveUser)
+			pword.setText(loginPreferences.getString(PREF_PASSWORD, ""));
 	}
 
-	private void initUserNameEditTextWithConstraints() {
+	private void initUserNameEditTextWithConstraints(boolean savePass) {
 		uname = (EditText) findViewById(R.id.username);
-		uname.setText((CharSequence) loadCredentials(PREF_USERNAME));
+		// uname.setText((CharSequence) loadCredentials(PREF_USERNAME));
 		uname.addTextChangedListener(new TextWatcher() {
 
 			@Override
@@ -119,15 +131,23 @@ public class Login extends Activity {
 			}
 
 			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
 			}
 
 			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
 				if (s.length() != 0 && !Pattern.matches("^[a-z0-9]+$", s))
 					uname.setError("Oops! Prefisso 'id', caratteri accettati a-z e 0-9");
 			}
 		});
+		if (savePass)
+			uname.setText(loginPreferences.getString(PREF_USERNAME, ""));
+
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(uname.getWindowToken(), 0);
+
 	}
 
 	private void makeLoginPasswordRequired() {
@@ -136,18 +156,33 @@ public class Login extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				if (uname.getText().length() == 0)
+
+				username = uname.getText().toString();
+				password = pword.getText().toString();
+
+				if (username.length() == 0)
 					uname.setError("Required");
-				else if (pword.getText().length() == 0)
+				else if (password.length() == 0)
 					pword.setError("Required");
-				else
+				else {
+					if (remeb.isChecked()) {
+						loginPrefsEditor.putBoolean(PREF_REMEMBER, true);
+						loginPrefsEditor.putString(PREF_USERNAME, username);
+						loginPrefsEditor.putString(PREF_PASSWORD, password);
+						loginPrefsEditor.commit();
+					} else {
+						loginPrefsEditor.clear();
+						loginPrefsEditor.commit();
+					}
+
 					new LoginTask().execute();
+				}
 			}
 		});
 	}
 
 	private void setLinkToJuliaSrl() {
-		TextView disclaimer = (TextView) findViewById(R.id.textView3);
+		TextView disclaimer = (TextView) findViewById(R.id.footer_message);
 		Linkify.addLinks(disclaimer, Linkify.ALL);
 	}
 
@@ -156,17 +191,9 @@ public class Login extends Activity {
 	}
 
 	private void login() {
-		username = uname.getText().toString();
-		password = pword.getText().toString();
-
 		cm.setCredentials(username, password);
-		saveCredentials(remeb.isChecked());
 
-		if (!isOnline()) {
-			cm.setLogged(false);
-			showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
-		}
-		else
+		if (isOnline())
 			try {
 				cm.authenticate();
 			} catch (ConnectException e) {
@@ -174,27 +201,17 @@ public class Login extends Activity {
 			} catch (LoginException e) {
 				showMessage(LOGIN_ERROR, e.getMessage());
 			}
+
+		else {
+			cm.setLogged(false);
+			showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
+		}
+
 	}
 
 	private void showMessage(int type, String msg) {
 		builder.setMessage(msg);
 		loginHandler.sendEmptyMessage(type);
-	}
-
-	private void saveCredentials(boolean value) {
-		if (value)
-			getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
-					.putString(PREF_USERNAME, username)
-					.putString(PREF_PASSWORD, password)
-					.putBoolean(PREF_REMEMBER, true).commit();
-		else
-			getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().clear().commit();
-	}
-
-	private Object loadCredentials(String key) {
-		SharedPreferences pref = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-		return key.equals(PREF_REMEMBER) ?
-			pref.getBoolean(key, false) : pref.getString(key, "");
 	}
 
 	private boolean initPage(String url) {
@@ -208,7 +225,8 @@ public class Login extends Activity {
 		html_pages.put("LIB", page_HTML);
 
 		// Pagina informazioni studente
-		page_HTML = cm.connection(ConnectionManager.ESSE3, Utils.TARGET_INFO, null);
+		page_HTML = cm.connection(ConnectionManager.ESSE3, Utils.TARGET_INFO,
+				null);
 		html_pages.put("INFO", page_HTML);
 
 		// Pagina iscrizione esami
@@ -218,10 +236,10 @@ public class Login extends Activity {
 
 		if (trs.isEmpty()) {
 			// OLD
-			page_HTML = cm.connection(ConnectionManager.SSOL, Utils.TARGET_ISCRIZIONI_OLD, null);
+			page_HTML = cm.connection(ConnectionManager.SSOL,
+					Utils.TARGET_ISCRIZIONI_OLD, null);
 			html_pages.put("ISCRIZ_OLD", page_HTML);
-		}
-		else
+		} else
 			// NEW
 			html_pages.put("ISCRIZ", page_HTML);
 
@@ -230,22 +248,26 @@ public class Login extends Activity {
 
 	// ritorna true se l'utente deve scegliere tra pi� matricole
 	private boolean isMultiID(String page_HTML) {
-		return page_HTML == null ? false : page_HTML.contains("Scegli carriera");
+		return page_HTML == null ? false : page_HTML
+				.contains("Scegli carriera");
 	}
 
-	// visualizza un menu con le matricole dell'utente(triennale, specialistica...)
+	// visualizza un menu con le matricole dell'utente(triennale,
+	// specialistica...)
 	private void selectID(String page_HTML) {
-		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID, new IDContextMenu.IconContextMenuOnClickListener() {
+		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID,
+				new IDContextMenu.IconContextMenuOnClickListener() {
 
-			@Override
-			public void onClick(final String url) {
-				new LoginTask().execute(url);
-			}
-		});
+					@Override
+					public void onClick(final String url) {
+						new LoginTask().execute(url);
+					}
+				});
 
 		Resources res = getResources();
 
-		for (Element tr : Utils.jsoupSelect(page_HTML, "table.detail_table").select("tr")) {
+		for (Element tr : Utils.jsoupSelect(page_HTML, "table.detail_table")
+				.select("tr")) {
 			Element a = tr.select("td.detail_table>a.detail_table").first();
 			if (a != null) {
 				String id = a.text();
@@ -265,7 +287,8 @@ public class Login extends Activity {
 
 			switch (msg.what) {
 			case SUCCESS:
-				Intent intent = new Intent(getApplicationContext(), TabBar.class);
+				Intent intent = new Intent(getApplicationContext(),
+						TabBar.class);
 				String pkg = getPackageName();
 				// setto i dati ricavati dal login
 				intent.putExtra(pkg + ".lib", html_pages.get("LIB"));
@@ -273,8 +296,9 @@ public class Login extends Activity {
 				if (html_pages.containsKey("ISCRIZ"))
 					intent.putExtra(pkg + ".iscriz", html_pages.get("ISCRIZ"));
 				else if (html_pages.containsKey("ISCRIZ_OLD"))
-					intent.putExtra(pkg + ".iscriz_old", html_pages.get("ISCRIZ_OLD"));
-				startActivity(intent);
+					intent.putExtra(pkg + ".iscriz_old",
+							html_pages.get("ISCRIZ_OLD"));
+				startActivityForResult(intent, 1);
 				break;
 			case CONNECTION_ERROR:
 			case LOGIN_ERROR:
@@ -303,15 +327,23 @@ public class Login extends Activity {
 	}
 
 	@Override
-	protected void onResume() {
-		super.onResume();
-
-		if (cm != null) {
-			cm.reset();
-			html_pages.clear();
-			Log.i("INFO", "Reset ClientManager!");
-		}
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		System.out.println(requestCode);
+		System.out.println(resultCode);
+		if(requestCode == 1) {
+			switch (resultCode) {
+			case Activity.RESULT_OK:
+				cm.reset();
+				html_pages.clear();
+				Log.i("INFO", "Reset ClientManager!");
+				break;
+			default:
+				showMessage(ERROR_MESSAGE, "Errore durante la chiusura dell'activity. Reset ClientManager NON avvenuto!");
+				break;
+			}
+		}		
 	}
+	
 
 	private class LoginTask extends AsyncTask<String, Void, Boolean> {
 
