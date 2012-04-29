@@ -1,21 +1,13 @@
 package com.juliasoft.libretto.activity;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.utils.Esame;
-import com.juliasoft.libretto.utils.Row;
-import com.juliasoft.libretto.utils.Separator;
-import com.juliasoft.libretto.utils.Utils;
-
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import android.R.integer;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -37,6 +29,12 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import com.juliasoft.libretto.connection.ConnectionManager;
+import com.juliasoft.libretto.utils.Esame;
+import com.juliasoft.libretto.utils.Row;
+import com.juliasoft.libretto.utils.Separator;
+import com.juliasoft.libretto.utils.Utils;
 
 public class Libretto extends ListActivity {
 
@@ -113,7 +111,6 @@ public class Libretto extends ListActivity {
 			} catch (Exception e) {
 				Log.e(TAG, "Retrieve data: " + e.getMessage());
 			}
-		
 
 		if (findPianoStudio()) {
 			for (String id : pianoStudio)
@@ -143,10 +140,11 @@ public class Libretto extends ListActivity {
 						"table.detail_table");
 
 				for (int i = 0; i < tables.size() - 1; i++) {
-					pianoStudio.add("Attività didattiche - Anno di corso " + (i + 1));
+					pianoStudio.add("Attività didattiche - Anno di corso "
+							+ (i + 1));
 					Elements trs = tables.get(i).select("tr:not(:has(th))");
-					for (Element tr : trs) 
-						pianoStudio.add(tr.select("td").get(0).text());					
+					for (Element tr : trs)
+						pianoStudio.add(tr.select("td").get(0).text());
 				}
 
 				return true;
@@ -302,7 +300,7 @@ public class Libretto extends ListActivity {
 		myIntent.putExtra(pkg + ".ric", esame.getRic());
 		myIntent.putExtra(pkg + ".q_val", esame.getQ_val());
 		myIntent.putExtra(pkg + ".img", esame.getStato_gif());
-		startActivityForResult(myIntent, 1);
+		startActivity(myIntent);
 	}
 
 	@Override

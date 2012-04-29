@@ -1,5 +1,6 @@
 package com.juliasoft.libretto.activity;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.TabActivity;
 import android.content.Intent;
@@ -28,6 +29,7 @@ public class TabBar extends TabActivity {
 	}
 
 	private void init() {
+		setResult(Activity.RESULT_OK);
 		initInfoButton();
 
 		Resources res = getResources();

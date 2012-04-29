@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Html;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,6 +29,7 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
@@ -193,14 +195,15 @@ public class IscrizioneAppello extends ExpandableListActivity {
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// TODO Auto-generated method stub
 		if (requestCode == 1)
 			switch (resultCode) {
 			case Activity.RESULT_OK:
 				appelloHandler.sendEmptyMessage(SUCCESS);
 				break;
 			case Activity.RESULT_CANCELED:
-				appelloHandler.sendEmptyMessage(FAIL);
+				Toast cancel = Toast.makeText(this, "Iscrizione NON avvenuta!", Toast.LENGTH_LONG);
+				cancel.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+				cancel.show();
 				break;
 			default:
 				showDialog(FAIL);
@@ -237,12 +240,6 @@ public class IscrizioneAppello extends ExpandableListActivity {
 				}
 				break;
 			case FAIL:
-				try {
-					refreshPage();
-					retrieveData();
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage());
-				}
 				break;
 			default:
 				break;
@@ -338,6 +335,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 						@SuppressWarnings("unchecked")
 						@Override
 						public void onClick(View v) {
+							b.setChecked(false);
 							appello.addParam("tipo_iscrizione", spinner
 									.getSelectedItem().toString());
 

@@ -3,11 +3,6 @@ package com.juliasoft.libretto.activity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.connection.SsolHttpClient;
-import com.juliasoft.libretto.utils.Appello;
-import com.juliasoft.libretto.utils.Utils;
-
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -29,6 +24,11 @@ import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.TextView;
+
+import com.juliasoft.libretto.connection.ConnectionManager;
+import com.juliasoft.libretto.connection.SsolHttpClient;
+import com.juliasoft.libretto.utils.Appello;
+import com.juliasoft.libretto.utils.Utils;
 
 public class Iscrizioni extends ExpandableListActivity {
 

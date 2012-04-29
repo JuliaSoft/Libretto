@@ -207,7 +207,7 @@ public class Info extends Activity {
 			return super.onCreateDialog(id);
 		}
 	}
-
+	
 	public class UpdateInfoTask extends AsyncTask<Void, Void, Void> {
 		private ProgressDialog progressDialog;
 		private ConnectionManager cm;

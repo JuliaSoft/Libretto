@@ -226,7 +226,7 @@ public class IscrizioniOld extends Activity {
 			return "";
 		}
 	}
-
+	
 	public class MyAsyncTask extends AsyncTask<String, Void, Void> {
 
 		private ProgressDialog progressDialog;
