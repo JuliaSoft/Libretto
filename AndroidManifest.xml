@@ -48,8 +48,7 @@
             android:name=".IscrizioneAppello"
             android:theme="@android:style/Theme.NoTitleBar" />        
          <activity
-            android:name=".Questionario"
-            android:theme="@android:style/Theme.NoTitleBar" />
+            android:name=".Questionario"/>
     </application>
 
 </manifest>

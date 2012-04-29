@@ -8,9 +8,11 @@ import org.apache.http.cookie.Cookie;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Resources.Theme;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,6 +38,7 @@ public class Questionario extends Activity {
 	private static final String TAG = Questionario.class.getName();
 	private static final int SUCCESS = 0;
 	private static final int LOAD = 1;
+	private static final int LOAD_DLG = 2;
 
 	private ConnectionManager cm;
 	private String questionario_HTML;
@@ -43,6 +46,7 @@ public class Questionario extends Activity {
 	public boolean loadJS = false;
 	public boolean javascriptInterfaceBroken = false;
 
+	private final Activity progressBar = this;
 	private WebView webView;
 	private ViewSwitcher vs;
 	private ProgressDialog dialog;
@@ -70,6 +74,7 @@ public class Questionario extends Activity {
 
 		dialog = new ProgressDialog(Questionario.this);
 		dialog.setCancelable(true);
+		dialog.setMessage("Loading ...");
 
 		setUpWebView();
 		loadSSOLCookies();
@@ -91,12 +96,14 @@ public class Questionario extends Activity {
 
 		// Add javascript interface only if it's not broken
 		if (!javascriptInterfaceBroken)
-			webView.addJavascriptInterface(new QuestionarioJSInterface(), "droid");
+			webView.addJavascriptInterface(new QuestionarioJSInterface(),
+					"droid");
 
 		webView.setWebChromeClient(new WebChromeClient() {
 			@Override
 			public void onProgressChanged(WebView view, int progress) {
-				Questionario.this.setProgress(progress * 100);
+				progressBar.setTitle("Loading...");
+				progressBar.setProgress(progress * 100);
 			}
 
 			@Override
@@ -164,13 +171,13 @@ public class Questionario extends Activity {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 			case LOAD:
+				if (!dialog.isShowing())
+					showDialog(LOAD_DLG);
 				loadQuestionario();
 				break;
 			case SUCCESS:
 				reset();
-				Intent result = new Intent();
-				result.putExtra("success", true);
-				setResult(Activity.RESULT_OK, result);
+				setResult(Activity.RESULT_OK, null);
 				finish();
 				break;
 			default:
@@ -188,15 +195,31 @@ public class Questionario extends Activity {
 		dialog.cancel();
 	}
 
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case LOAD_DLG:
+			return dialog;
+		default:
+			return super.onCreateDialog(id);
+		}
+	}
+
+	@Override
+	public void onBackPressed() {
+		reset();
+		setResult(Activity.RESULT_CANCELED, null);
+		super.onBackPressed();
+	}
+
 	class MyWebViewClient extends WebViewClient {
 
 		@Override
 		public void onPageStarted(WebView view, String url, Bitmap favicon) {
-			if (!loadJS) {
-				dialog.setMessage("Loading ...");
-				dialog.show();
+			System.out.println("Connect to: " + url);
+			if (!loadJS)
 				vs.showPrevious(); // Nascondo il browser
-			}
+
 			super.onPageStarted(view, url, favicon);
 		}
 
