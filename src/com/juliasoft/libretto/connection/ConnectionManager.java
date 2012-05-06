@@ -21,13 +21,13 @@ import com.juliasoft.libretto.utils.Utils;
 
 public class ConnectionManager {
 
+	private static final boolean DEBUG = true;
 	public static final String TAG = ConnectionManager.class.getName();
 
 	public static final int SSOL = 0;
 	public static final int ESSE3 = 1;
 
 	private static ConnectionManager instance;
-	private static KeyStore trustStore;
 	private static Map<Integer, List<Cookie>> cookies;
 
 	private String username;
@@ -49,7 +49,8 @@ public class ConnectionManager {
 	public static ConnectionManager getInstance() {
 		if (instance == null) {
 			instance = new ConnectionManager();
-			Log.i("INFO", "Start new ClientManager!");
+			if (DEBUG)
+				Log.i("INFO", "Start new ClientManager!");
 		}
 
 		return instance;
@@ -58,15 +59,14 @@ public class ConnectionManager {
 	public static KeyStore getTrustStore(String url, int port)
 			throws KeyManagementException, KeyStoreException,
 			NoSuchAlgorithmException, CertificateException, IOException {
-		if (trustStore == null)
-			trustStore = new InstallCert(url, port).getUpdatedTrustStore();
-
-		return trustStore;
+		return new InstallCert(url, port).getUpdatedTrustStore();
 	}
 
 	public void authenticate() throws ConnectException, LoginException {
-		Log.i(TAG, "Login user: " + username);
+		if (DEBUG)
+			Log.i(TAG, "Login user: " + username);
 		isLogged = false;
+		cookies.clear();
 
 		// Login presso univr.esse3.cineca.it
 		esse3Conn = new HttpConnection(new Esse3HttpClient(username, password));
@@ -74,27 +74,35 @@ public class ConnectionManager {
 		esse3Conn.getEntity();
 		esse3Conn.consumeContent();
 
+		if (DEBUG)
+			Log.i(TAG, "Login to Esse3 successful!");
+
 		// Login presso www.ssol.univr.it
 		ssolConn = new HttpConnection(new SsolHttpClient());
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("username", username);
 		params.put("password", password);
 		ssolConn.post(SsolHttpClient.AUTH_URI + "main?ent=login", params);
-		ssolConn.getEntity();
 
 		try {
 			ssol_login_HTML = Utils.inputStreamToString(ssolConn.getEntity().getContent());
+			if (DEBUG)
+				Log.i(TAG, "Login to Ssol successful!");
 		} catch (IOException e) {
+			if (DEBUG)
+				Log.e(TAG, e.getMessage());
 		}
 
 		if (ssol_login_HTML.contains("Content_Chiaro Warning"))
 			throw new LoginException(HttpConnection.HTTP_UNAUTHORIZED_EXCEPTION);
 
 		isLogged = true;
+
 		// After Login save cookies
 		cookies.put(ESSE3, esse3Conn.getCookies());
 		cookies.put(SSOL, ssolConn.getCookies());
-		Log.i(TAG, "Login OK");
+		if (DEBUG)
+			Log.i(TAG, "Login OK");
 	}
 
 	public List<Cookie> getSSOLCookies() {
@@ -111,7 +119,8 @@ public class ConnectionManager {
 
 	public String connection(int type, String url,
 			HashMap<String, String> params) {
-		Log.i(TAG, "Connessione URL: " + url);
+		if (DEBUG)
+			Log.i(TAG, "Connect to: " + url);
 
 		try {
 			if (!isLogged)
@@ -125,7 +134,8 @@ public class ConnectionManager {
 			}
 		} catch (Exception e) {
 			isLogged = false;
-			Log.e(TAG, "Error connection(..): " + e.getMessage());
+			if (DEBUG)
+				Log.e(TAG, "Connection error: " + e.getMessage());
 		}
 
 		return null;
@@ -152,7 +162,13 @@ public class ConnectionManager {
 		if (esse3Conn != null)
 			esse3Conn.reset();
 
+		if (!cookies.isEmpty())
+			cookies.clear();
+		
 		instance = null;
+
+		if (DEBUG)
+			Log.i(TAG, "Reset ConnectionManager!");
 	}
 
 	public HttpConnection getEsse3Connection() {
