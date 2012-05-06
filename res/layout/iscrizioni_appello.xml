@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#c2ac79"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/tv_iscr_esame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|left"
+        android:maxLines="2"
+        android:minHeight="45dp"
+        android:padding="5dp"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="#5a412c"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_iscr_corso"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="#0d3d64"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="30dip"
+        android:background="#3a3f1e"
+        android:gravity="center_vertical"
+        android:paddingLeft="15dip"
+        android:text="Iscrizione appello d&apos;esame"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="#E18E2C"
+        android:textStyle="bold" >
+    </TextView>
+
+    <ExpandableListView
+        android:id="@+id/android:list"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+</LinearLayout>

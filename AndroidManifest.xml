@@ -15,7 +15,9 @@
         android:label="@string/app_name" >
         <activity
             android:name=".Login"
+            android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -25,30 +27,49 @@
         </activity>
         <activity
             android:name=".TabBar"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" />
         <activity
             android:name=".Info"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" />
         <activity
             android:name=".Libretto"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" />
         <activity
             android:name=".Iscrizioni"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" />
         <activity
             android:name=".IscrizioniOld"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" />
         <activity
             android:name=".Medie"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" />
         <activity
             android:name=".DettagliEsame"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.NoTitleBar" />
         <activity
             android:name=".IscrizioneAppello"
-            android:theme="@android:style/Theme.NoTitleBar" />        
-         <activity
-            android:name=".Questionario"/>
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar" />
+        <activity
+            android:name=".Questionario"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar" />
     </application>
 
 </manifest>
