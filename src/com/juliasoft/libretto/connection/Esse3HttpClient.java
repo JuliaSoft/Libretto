@@ -16,10 +16,12 @@ import android.util.Log;
 
 public class Esse3HttpClient extends DefaultHttpClient {
 
-	public static final String TAG = Esse3HttpClient.class.getName();
+	private static final boolean DEBUG = true;
+	private static final String TAG = Esse3HttpClient.class.getName();
+
 	public static final String DOMAIN = "univr.esse3.cineca.it";
 	public static final String AUTH_URI = "https://" + DOMAIN + "/";
-	public static final int PORT = 443;
+	public static final int SICURE_PORT = 443;
 
 	private ClientConnectionManager ccm;
 	private CredentialsProvider cp;
@@ -33,32 +35,29 @@ public class Esse3HttpClient extends DefaultHttpClient {
 	}
 
 	private SSLSocketFactory newSslSocketFactory() {
+		SSLSocketFactory factory;
 		try {
-			// Pass the keystore to the SSLSocketFactory.
-			// The factory is responsible for the verification
-			// of the server certificate.
-			SSLSocketFactory factory = new SSLSocketFactory(ConnectionManager.getTrustStore(DOMAIN, PORT));
-			// Hostname verification from certificate
-			factory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-			return factory;
+			factory = new SSLSocketFactory(ConnectionManager.getTrustStore(DOMAIN, SICURE_PORT));			
 		} catch (final Exception e) {
-			Log.e(TAG, "Caught exception when trying to create ssl socket factory. Reason: " + e.getMessage());
-
-			return null;
+			factory = SSLSocketFactory.getSocketFactory();
+			if (DEBUG)
+				Log.e(TAG, "Caught exception when trying to create ssl socket factory. Reason: " + e.getMessage());
 		}
+		
+		factory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+		
+		return factory;
 	}
 
 	@Override
 	protected ClientConnectionManager createClientConnectionManager() {
 		if (ccm == null) {
 			SchemeRegistry registry = new SchemeRegistry();
-
-			// Register our SSLSocketFactory (with our Keystore) for port 443
-			registry.register(new Scheme("https", this.newSslSocketFactory(), PORT));
-			HttpConnectionParams.setSoTimeout(getParams(), 5000);
-			HttpConnectionParams.setConnectionTimeout(getParams(), 5000);
+			registry.register(new Scheme("https", newSslSocketFactory(), SICURE_PORT));
+			HttpConnectionParams.setSoTimeout(getParams(), 10000);
 			ccm = new SingleClientConnManager(getParams(), registry);
 		}
+		
 		return ccm;
 	}
 
@@ -68,6 +67,7 @@ public class Esse3HttpClient extends DefaultHttpClient {
 			cp = new BasicCredentialsProvider();
 			cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, pass));
 		}
+		
 		return cp;
 	}
 }

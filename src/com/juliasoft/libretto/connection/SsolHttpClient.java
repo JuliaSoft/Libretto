@@ -15,7 +15,9 @@ import android.util.Log;
 
 public class SsolHttpClient extends DefaultHttpClient {
 
-	public static final String TAG = SsolHttpClient.class.getName();
+	private static final boolean DEBUG = true;
+	private static final String TAG = SsolHttpClient.class.getName();
+	
 	public static final String DOMAIN = "www.ssol.univr.it";
 	public static final String AUTH_URI = "https://" + DOMAIN + "/";
 	public static final int SICURE_PORT = 443;
@@ -23,50 +25,33 @@ public class SsolHttpClient extends DefaultHttpClient {
 
 	private ClientConnectionManager ccm = null;
 
-	private SSLSocketFactory createFactory() {
-
-		// Log.d(TAG, "Creating ssl socket");
-
+	private SSLSocketFactory newSslSocketFactory() {
+		SSLSocketFactory factory = SSLSocketFactory.getSocketFactory();
+		
 		try {
-			KeyStore trustStore = KeyStore.getInstance(KeyStore
-					.getDefaultType());
+			KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
 			trustStore.load(null, null);
-			// Pass the keystore to the SSLSocketFactory. The factory is
-			// responsible
-			// for the verification of the server certificate.
-			SSLSocketFactory factory = new MySSLSocketFactory(trustStore);
-			factory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-
-			// final SSLSocketFactory factory = new
-			// SSLSocketFactory(ConnectionManager.getTrustStore(DOMAIN, PORT));
-			// Hostname verification from certificate
-			factory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-			return factory;
+			factory = new MySSLSocketFactory(trustStore);
 		} catch (Exception e) {
-			Log.e(TAG,
-					"Caught exception when trying to create ssl socket factory. Reason: "
-							+ e.getMessage());
+			if(DEBUG)
+				Log.e(TAG, "Caught exception when trying to create ssl socket factory. Reason: " + e.getMessage());
 		}
 
-		return null;
+		factory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+		
+		return factory;
 	}
 
 	@Override
 	protected ClientConnectionManager createClientConnectionManager() {
-
 		if (ccm == null) {
-			// Log.d(TAG, "Creating client connection manager");
 			final SchemeRegistry registry = new SchemeRegistry();
-
-			// Log.d(TAG, "Adding https scheme for port " + SICURE_PORT);
-			registry.register(new Scheme("https", this.createFactory(),
-					SICURE_PORT));
-			registry.register(new Scheme("http", PlainSocketFactory
-					.getSocketFactory(), DEFAULT_PORT));
-			HttpConnectionParams.setSoTimeout(getParams(), 5000);
-			HttpConnectionParams.setConnectionTimeout(getParams(), 5000);
+			registry.register(new Scheme("https", newSslSocketFactory(), SICURE_PORT));
+			registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), DEFAULT_PORT));			
+			HttpConnectionParams.setSoTimeout(getParams(), 10000);			
 			ccm = new SingleClientConnManager(getParams(), registry);
 		}
+		
 		return ccm;
 	}
 }

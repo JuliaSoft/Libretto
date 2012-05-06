@@ -38,23 +38,25 @@ import com.juliasoft.libretto.utils.Utils;
 
 public class Libretto extends ListActivity {
 
-	public static final String TAG = Libretto.class.getName();
+	private static final boolean DEBUG = true;
+	private static final String TAG = Libretto.class.getName();
 
 	private static final int SHOW_ACTIVITY = 0;
-	private static final int DIALOG_MESSAGE = 1;
+	private static final int ERROR_MESSAGE = 1;
 
-	private static final int CONNECTION_ERROR = 2;
-	private static final int LOGIN_ERROR = 3;
+	private static final int ERROR_DIALOG_ID = 2;
+	private static final int PROGRESS_DIALOG_ID = 3;
 
-	private static final int MENU_MEDIA = R.id.mitem01;
-	private static final int MENU_UPDATE = R.id.mitem03;
+	private static final int MENU_MEDIA = R.id.libretto_menu_statistiche;
+	private static final int MENU_UPDATE = R.id.libretto_menu_update;
 
-	private ConnectionManager cm;
+	private LibrettoTask librettoTask;
 	private Set<Esame> esami;
-	private ArrayList<String> pianoStudio = new ArrayList<String>();
+	private ArrayList<String> pianoStudio;
 
 	private SeparatedListAdapter adapter;
-	private AlertDialog builder;
+	private AlertDialog allertDialog;
+	private ProgressDialog progressDialog;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -62,21 +64,120 @@ public class Libretto extends ListActivity {
 		init();
 	}
 
-	private void init() {
-		Intent intent = getIntent();
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		getMenuInflater().inflate(R.menu.lib_menu, menu);
+		return true;
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case ERROR_DIALOG_ID:
+			return allertDialog;
+		case PROGRESS_DIALOG_ID:
+			return progressDialog;
+		default:
+			return super.onCreateDialog(id);
+		}
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case MENU_MEDIA:
+			librettoHandler.sendEmptyMessage(SHOW_ACTIVITY);
+			return true;
+		case MENU_UPDATE:
+			doUpdate();
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		if (adapter.getItemViewType(position) == SeparatedListAdapter.TYPE_SEPARATOR)
+			return;
+
+		Row row = adapter.getItem(position);
+		if (!(row instanceof Esame))
+			return;
+
+		Esame esame = (Esame) row;
+
+		Intent detailsIntent = new Intent(Libretto.this, DettagliEsame.class);
+
 		String pkg = getPackageName();
-		String page_HTML = intent.getStringExtra(pkg + ".lib");
+		detailsIntent.putExtra(pkg + ".esame", esame.getNome());
+		detailsIntent.putExtra(pkg + ".anno_corso", esame.getAnno_corso());
+		detailsIntent.putExtra(pkg + ".aa_freq", esame.getAa_freq());
+		detailsIntent.putExtra(pkg + ".peso_crediti", esame.getCrediti());
+		detailsIntent.putExtra(pkg + ".data_esame", esame.getData());
+		detailsIntent.putExtra(pkg + ".voto", esame.getVoto());
+		detailsIntent.putExtra(pkg + ".ric", esame.getRic());
+		detailsIntent.putExtra(pkg + ".q_val", esame.getQ_val());
+		detailsIntent.putExtra(pkg + ".img", esame.getStato_gif());
+		startActivity(detailsIntent);
+	}
 
-		cm = ConnectionManager.getInstance();
+	private Handler librettoHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
 
-		adapter = new SeparatedListAdapter(Libretto.this,
-				R.layout.libretto_item);
+			switch (msg.what) {
+			case SHOW_ACTIVITY:
+				Intent statisticsIntent = new Intent(getApplicationContext(), Medie.class);
+				String pkg = getPackageName();
+
+				statisticsIntent.putExtra(pkg + ".aritm", String.valueOf(mediaAritmetica()));
+				statisticsIntent.putExtra(pkg + ".pond", String.valueOf(mediaPonderata()));
+				statisticsIntent.putExtra(pkg + ".num", String.valueOf(numeroEsami()));
+				statisticsIntent.putExtra(pkg + ".crediti", String.valueOf(creditiSostenuti()));
+
+				startActivity(statisticsIntent);
+				break;
+			case ERROR_MESSAGE:
+				showDialog(ERROR_DIALOG_ID);
+				break;
+			}
+		}
+	};
+
+	private void init() {
+		adapter = new SeparatedListAdapter(Libretto.this, R.layout.libretto_item);
 		esami = new HashSet<Esame>();
 		pianoStudio = new ArrayList<String>();
 
-		builder = new AlertDialog.Builder(this).setTitle("Login")
-				.setIcon(android.R.drawable.ic_dialog_alert).create();
-		builder.setButton("OK", new DialogInterface.OnClickListener() {
+		initDialog();
+
+		getListView().setSelector(R.drawable.list_selector_on_top);
+		getListView().setDrawSelectorOnTop(true);
+		getListView().invalidateViews();
+
+		doUpdate();
+	}
+
+	private void initDialog() {
+		progressDialog = new ProgressDialog(Libretto.this);
+		progressDialog.setTitle("Please wait...");
+		progressDialog.setMessage("Loading data ...");
+		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+					
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				librettoTask.cancel(true);
+			}
+		});
+
+		allertDialog = new AlertDialog
+				.Builder(Libretto.this)
+				.setTitle("Libretto")
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.create();
+		allertDialog.setButton("OK", new DialogInterface.OnClickListener() {
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -84,88 +185,69 @@ public class Libretto extends ListActivity {
 			}
 		});
 
-		WindowManager.LayoutParams lp = builder.getWindow().getAttributes();
+		WindowManager.LayoutParams lp = allertDialog.getWindow().getAttributes();
 		lp.dimAmount = 0.5f;
 
-		builder.getWindow().setAttributes(lp);
-		builder.getWindow().addFlags(
-				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		allertDialog.getWindow().setAttributes(lp);
+		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+	}
 
-		getListView().setSelector(R.drawable.list_selector_on_top);
-		getListView().setDrawSelectorOnTop(true);
-		getListView().invalidateViews();
-
-		new LibrettoTask().execute(page_HTML);
+	private void doUpdate() {
+		showDialog(PROGRESS_DIALOG_ID);
+		librettoTask = (LibrettoTask) new LibrettoTask().execute();
 	}
 
 	private void retrieveData(String page_HTML) {
-		if (page_HTML == null)
-			return;
+		if (page_HTML != null) {
 
-		Elements trs = Utils.jsoupSelect(page_HTML, "table.detail_table")
-				.select("tr:not(:has(th))");
+			Elements trs = Utils.jsoupSelect(page_HTML, "table.detail_table").select("tr:not(:has(th))");
 
-		for (Element tr : trs)
-			try {
-				esami.add(new Esame(tr.children()));
-			} catch (Exception e) {
-				Log.e(TAG, "Retrieve data: " + e.getMessage());
-			}
-
-		if (findPianoStudio()) {
-			for (String id : pianoStudio)
-				if (id.contains("Anno"))
-					adapter.addSeparatorItem(new Separator(id));
-				else
-					for (Esame e : esami)
-						if (e.getId().equals(id))
-							adapter.addItem(e);
-
-			adapter.addSeparatorItem(new Separator(
-					"Attività formative a scelta dello studente"));
-			for (Esame e : esami)
-				if (!pianoStudio.contains(e.getId()))
-					adapter.addItem(e);
-		} else
-			for (Esame e : esami)
-				adapter.addItem(e);
-	}
-
-	private boolean findPianoStudio() {
-		if (cm.isLogged()) {
-			try {
-				String page_HTML = cm.connection(ConnectionManager.ESSE3,
-						Utils.TARGET_PIANO_STUDIO, null);
-				Elements tables = Utils.jsoupSelect(page_HTML,
-						"table.detail_table");
-
-				for (int i = 0; i < tables.size() - 1; i++) {
-					pianoStudio.add("Attività didattiche - Anno di corso "
-							+ (i + 1));
-					Elements trs = tables.get(i).select("tr:not(:has(th))");
-					for (Element tr : trs)
-						pianoStudio.add(tr.select("td").get(0).text());
+			for (Element tr : trs)
+				try {
+					esami.add(new Esame(tr.children()));
+				} catch (Exception e) {
+					if(DEBUG)
+						Log.e(TAG, "Retrieve data: " + e.getMessage());
 				}
 
-				return true;
-			} catch (Exception e) {
-				Log.e(TAG, "Piano studi: " + e.getMessage());
-			}
+			if (!pianoStudio.isEmpty()) {
+				for (String id : pianoStudio)
+					if (id.contains("Anno"))
+						adapter.addSeparatorItem(new Separator(id));
+					else
+						for (Esame e : esami)
+							if (e.getId().equals(id))
+								adapter.addItem(e);
+
+				adapter.addSeparatorItem(new Separator("Attività formative a scelta dello studente"));
+				for (Esame e : esami)
+					if (!pianoStudio.contains(e.getId()))
+						adapter.addItem(e);
+			} else
+				for (Esame e : esami)
+					adapter.addItem(e);
 		}
-		return false;
 	}
 
-	private void showMessage(int type, String msg) {
-		builder.setMessage(msg);
-		librettoHandler.sendEmptyMessage(type);
+	private void onTaskCompleted() {
+		setListAdapter(adapter);
+		registerForContextMenu(getListView());
+		removeDialog(PROGRESS_DIALOG_ID);
+		librettoTask = null;
+		if (DEBUG)
+			Log.i(TAG, "Task complete.");
+	}
+
+	private void showErrorMessage(String msg) {
+		allertDialog.setMessage(msg);
+		librettoHandler.sendEmptyMessage(ERROR_MESSAGE);
 	}
 
 	private int numeroEsami() {
 		int result = 0;
 
 		for (Esame e : esami)
-			if (!e.getVoto().equals("APPR") && !e.getVoto().equals("IDO")
-					&& !e.getVoto().equals(""))
+			if (!e.getVoto().equals("APPR") && !e.getVoto().equals("IDO") && !e.getVoto().equals(""))
 				result++;
 
 		return result;
@@ -199,8 +281,7 @@ public class Libretto extends ListActivity {
 			else
 				try {
 					somma += Integer.parseInt(voto);
-				} catch (NumberFormatException ex) {
-				}
+				} catch (NumberFormatException ex) {}
 		}
 		try {
 			return arrotonda((double) somma / numeroEsami(), 2);
@@ -220,8 +301,7 @@ public class Libretto extends ListActivity {
 						.getCrediti());
 				somma += Integer.parseInt(voto) * crediti;
 				count += crediti;
-			} catch (NumberFormatException ex) {
-			}
+			} catch (NumberFormatException ex) {}
 		}
 
 		try {
@@ -232,110 +312,27 @@ public class Libretto extends ListActivity {
 	}
 
 	private double arrotonda(double numero, int nCifreDecimali) {
-		return Math.round(numero * Math.pow(10, nCifreDecimali))
-				/ Math.pow(10, nCifreDecimali);
-	}
-
-	private Handler librettoHandler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-
-			switch (msg.what) {
-			case SHOW_ACTIVITY:
-				Intent intent = new Intent(getApplicationContext(), Medie.class);
-				String pkg = getPackageName();
-
-				intent.putExtra(pkg + ".aritm",
-						String.valueOf(mediaAritmetica()));
-				intent.putExtra(pkg + ".pond", String.valueOf(mediaPonderata()));
-				intent.putExtra(pkg + ".num", String.valueOf(numeroEsami()));
-				intent.putExtra(pkg + ".crediti",
-						String.valueOf(creditiSostenuti()));
-
-				startActivity(intent);
-				break;
-			case CONNECTION_ERROR:
-			case LOGIN_ERROR:
-				showDialog(DIALOG_MESSAGE);
-				break;
-			}
-		}
-	};
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		super.onCreateOptionsMenu(menu);
-		getMenuInflater().inflate(R.menu.lib_menu, menu);
-		return true;
-	}
-
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		if (id == DIALOG_MESSAGE)
-			return builder;
-		else
-			return super.onCreateDialog(id);
-	}
-
-	@Override
-	protected void onListItemClick(ListView l, View v, int position, long id) {
-		if (adapter.getItemViewType(position) == SeparatedListAdapter.TYPE_SEPARATOR)
-			return;
-
-		Row row = adapter.getItem(position);
-		if (!(row instanceof Esame))
-			return;
-
-		Esame esame = (Esame) row;
-
-		Intent myIntent = new Intent(Libretto.this, DettagliEsame.class);
-
-		String pkg = getPackageName();
-		myIntent.putExtra(pkg + ".esame", esame.getNome());
-		myIntent.putExtra(pkg + ".anno_corso", esame.getAnno_corso());
-		myIntent.putExtra(pkg + ".aa_freq", esame.getAa_freq());
-		myIntent.putExtra(pkg + ".peso_crediti", esame.getCrediti());
-		myIntent.putExtra(pkg + ".data_esame", esame.getData());
-		myIntent.putExtra(pkg + ".voto", esame.getVoto());
-		myIntent.putExtra(pkg + ".ric", esame.getRic());
-		myIntent.putExtra(pkg + ".q_val", esame.getQ_val());
-		myIntent.putExtra(pkg + ".img", esame.getStato_gif());
-		startActivity(myIntent);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case MENU_MEDIA:
-			librettoHandler.sendEmptyMessage(SHOW_ACTIVITY);
-			return true;
-		case MENU_UPDATE:
-			new LibrettoTask().execute();
-			return true;
-		default:
-			return false;
-		}
+		return Math.round(numero * Math.pow(10, nCifreDecimali)) / Math.pow(10, nCifreDecimali);
 	}
 
 	private class SeparatedListAdapter extends ArrayAdapter<Row> {
 
 		public static final int TYPE_ITEM = 0;
 		public static final int TYPE_SEPARATOR = 1;
+		public static final int TYPE_MAX_COUNT = 2;
 
-		private static final int TYPE_MAX_COUNT = TYPE_SEPARATOR + 1;
-
-		private final TreeSet<Integer> mSeparatorsSet;
+		private final TreeSet<Integer> separatorsSet;
 		private final ArrayList<Row> rows;
 
 		public SeparatedListAdapter(Context context, int textViewResourceId) {
 			super(context, textViewResourceId);
 			rows = new ArrayList<Row>();
-			mSeparatorsSet = new TreeSet<Integer>();
+			separatorsSet = new TreeSet<Integer>();
 		}
 
 		public void reset() {
 			rows.clear();
-			mSeparatorsSet.clear();
+			separatorsSet.clear();
 			notifyDataSetChanged();
 		}
 
@@ -346,8 +343,7 @@ public class Libretto extends ListActivity {
 
 		public void addSeparatorItem(Separator separator) {
 			rows.add(separator);
-			// save separator position
-			mSeparatorsSet.add(rows.size() - 1);
+			separatorsSet.add(rows.size() - 1);
 			notifyDataSetChanged();
 		}
 
@@ -373,8 +369,7 @@ public class Libretto extends ListActivity {
 
 		@Override
 		public int getItemViewType(int position) {
-			return mSeparatorsSet.contains(position) ? TYPE_SEPARATOR
-					: TYPE_ITEM;
+			return separatorsSet.contains(position) ? TYPE_SEPARATOR : TYPE_ITEM;
 		}
 
 		@Override
@@ -385,89 +380,99 @@ public class Libretto extends ListActivity {
 			if (row == null) {
 				switch (type) {
 				case TYPE_ITEM:
-					row = getLayoutInflater().inflate(R.layout.libretto_item,
-							parent, false);
+					row = getLayoutInflater().inflate(R.layout.libretto_item, parent, false);
 					break;
 				case TYPE_SEPARATOR:
-					row = getLayoutInflater().inflate(
-							R.layout.libretto_separator, parent, false);
+					row = getLayoutInflater().inflate(R.layout.libretto_separator, parent, false);
 					break;
 				}
 			}
+			
 			switch (type) {
-			case TYPE_ITEM: {
+			case TYPE_ITEM: 
 				Esame esame = (Esame) rows.get(position);
 
-				ImageView v = (ImageView) row.findViewById(R.id.bar);
-				TextView label = (TextView) row.findViewById(R.id.esame);
+				ImageView v = (ImageView) row.findViewById(R.id.libretto_item_bar);
+				TextView label = (TextView) row.findViewById(R.id.libretto_item_esame);
 				label.setText(esame.toString());
 
-				TextView voto = (TextView) row.findViewById(R.id.li_voto);
+				TextView voto = (TextView) row.findViewById(R.id.libretto_item_voto);
 				voto.setText(esame.getVoto());
+				
 				if (esame.getVoto() != null && esame.getVoto().length() > 0)
 					v.setBackgroundResource(R.layout.green_bar);
 				else
 					v.setBackgroundResource(R.layout.red_bar);
 
 				break;
-			}
-			case TYPE_SEPARATOR: {
+			case TYPE_SEPARATOR: 
 				Separator separator = (Separator) rows.get(position);
 				TextView vi = (TextView) row.findViewById(R.id.separator);
 				vi.setText(separator.getNome());
-				break;
-			}
+				break;			
 			}
 
 			return row;
 		}
 	}
 
-	public class LibrettoTask extends AsyncTask<String, Void, Void> {
+	public class LibrettoTask extends AsyncTask<Void, Void, Void> {
 
-		private final ProgressDialog dialog;
+		private ConnectionManager cm;
 
 		public LibrettoTask() {
-			dialog = new ProgressDialog(Libretto.this);
-			dialog.setTitle("Please wait...");
-			dialog.setCancelable(true);
+			cm = ConnectionManager.getInstance();
 		}
 
 		@Override
 		protected void onPreExecute() {
-			dialog.setMessage("Loading data ...");
-			dialog.show();
-			reset();
-		}
-
-		private void reset() {
-			adapter.reset();
-			adapter = new SeparatedListAdapter(Libretto.this,
-					R.layout.libretto_item);
-			pianoStudio.clear();
-			esami.clear();
+			super.onPreExecute();
+			doReset();
 		}
 
 		@Override
 		protected void onPostExecute(Void success) {
-			if (dialog.isShowing())
-				dialog.dismiss();
-			setListAdapter(adapter);
-			registerForContextMenu(getListView());
+			super.onPostExecute(success);
+			onTaskCompleted();
 		}
 
 		@Override
-		protected Void doInBackground(String... params) {
-			if (params != null && params.length > 0)
-				retrieveData(params[0]);
-			else if (!Utils.isNetworkAvailable(Libretto.this)) {
+		protected Void doInBackground(Void... params) {
+			if (Utils.isNetworkAvailable(Libretto.this)) {
+				if (!isCancelled())
+					initStudyPlan();
+				if (!isCancelled())
+					retrieveData(cm.connection(ConnectionManager.ESSE3, Utils.TARGET_LIBRETTO, null));
+			} else {
 				cm.setLogged(false);
-				showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
-			} else
-				retrieveData(cm.connection(ConnectionManager.ESSE3,
-						Utils.TARGET_LIBRETTO, null));
+				showErrorMessage("Connessione NON attiva!");
+			}
+			return (null);
+		}
 
-			return null;
+		private void initStudyPlan() {
+			try {
+				String page_HTML = cm.connection(ConnectionManager.ESSE3, Utils.TARGET_PIANO_STUDIO, null);
+				Elements tables = Utils.jsoupSelect(page_HTML, "table.detail_table");
+
+				for (int i = 0; i < tables.size() - 1; i++) {
+					pianoStudio.add("Attività didattiche - Anno di corso " + (i + 1));
+					Elements trs = tables.get(i).select("tr:not(:has(th))");
+					for (Element tr : trs)
+						pianoStudio.add(tr.select("td").get(0).text());
+				}
+			} catch (Exception e) {
+				if(DEBUG)
+					Log.e(TAG, "Piano studi: " + e.getMessage());
+				pianoStudio.clear();
+			}
+		}
+
+		private void doReset() {
+			adapter.reset();
+			adapter = new SeparatedListAdapter(Libretto.this, R.layout.libretto_item);
+			pianoStudio.clear();
+			esami.clear();
 		}
 	}
 }

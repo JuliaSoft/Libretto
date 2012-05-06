@@ -8,10 +8,12 @@ import java.util.List;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ExpandableListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -19,37 +21,37 @@ import android.os.Handler;
 import android.os.Message;
 import android.text.Html;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.connection.SsolHttpClient;
 import com.juliasoft.libretto.utils.Iscrizione;
 import com.juliasoft.libretto.utils.Utils;
 
 public class IscrizioneAppello extends ExpandableListActivity {
 
+	private static final boolean DEBUG = true;
 	private static final String TAG = IscrizioneAppello.class.getName();
 
 	private static final int INIT = 0;
-	private static final int SUCCESS = 1;
-	private static final int FAIL = 2;
-	private static final int QUEST = 3;
+	private static final int QUEST = 1;
+	private static final int ERROR_MESSAGE = 2;
 
-	private ConnectionManager cm;
+	private static final int ERROR_DIALOG_ID = 3;
+	private static final int PROGRESS_DIALOG_ID = 4;
+
 	private ArrayList<String> groupData;
 	private ArrayList<List<Object>> childData;
-	private String url;
+	private String iscrizione_URL;
 	private String page_HTML;
 	private String page_URL;
 	private boolean loadQuestionario;
@@ -57,158 +59,144 @@ public class IscrizioneAppello extends ExpandableListActivity {
 	private TextView corso;
 	private TextView esame;
 	private ArrayAdapter<String> adapter;
+	private AlertDialog allertDialog;
+	private ProgressDialog progressDialog;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.iscriz_appelli);
+		setContentView(R.layout.iscrizioni_appello);
 		init();
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case ERROR_DIALOG_ID:
+			return allertDialog;
+		case PROGRESS_DIALOG_ID:
+			return progressDialog;
+		default:
+			return super.onCreateDialog(id);
+		}
 	}
 
 	private void init() {
 		Intent intent = getIntent();
 		String pkg = getPackageName();
-		page_HTML = intent.getStringExtra(pkg + ".iscriz");
-
-		cm = ConnectionManager.getInstance();
-		page_URL = intent.getStringExtra(pkg + ".url");
-
+		page_HTML = intent.getStringExtra(pkg + ".page_HTML");
+		page_URL = intent.getStringExtra(pkg + ".page_URL");
+		
 		groupData = new ArrayList<String>();
 		childData = new ArrayList<List<Object>>();
 
 		corso = (TextView) findViewById(R.id.tv_iscr_corso);
 		esame = (TextView) findViewById(R.id.tv_iscr_esame);
 
+		initDialog();
 		retrieveData();
 	}
 
+	private void initDialog() {
+		progressDialog = new ProgressDialog(IscrizioneAppello.this);
+		progressDialog.setTitle("Please wait...");
+		progressDialog.setMessage("Loading data ...");
+		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+
+					@Override
+					public void onCancel(DialogInterface dialog) {
+						dialog.dismiss();
+					}
+				});
+
+		allertDialog = new AlertDialog
+				.Builder(IscrizioneAppello.this)
+				.setTitle("Libretto")
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.create();
+		allertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+
+		});
+
+		WindowManager.LayoutParams lp = allertDialog.getWindow().getAttributes();
+		lp.dimAmount = 0.5f;
+
+		allertDialog.getWindow().setAttributes(lp);
+		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+	}
+
 	private void retrieveData() {
-		if (page_HTML == null) {
-			return;
-		}
-
 		try {
+			if (page_HTML == null) {
+				return;
+			}
+
 			Element fieldset = Utils.jsoupSelect(page_HTML, "fieldset").first();
-
-			Element legend = fieldset.select("legend").first();
-			if (legend != null) {
-				try {
-					String s[] = legend.text().split(" - ");
-					corso.setText(s[0]);
-					esame.setText(s[1]);
-				} catch (NullPointerException e) {
-					Log.e(TAG, "Retrive data: split error");
-				}
-			}
-
-			Elements groups = fieldset.select("p.provaDiesame");
-
-			for (Element group : groups) {
-				String text = "";
-				group = group.nextElementSibling();
-				Elements strongs = group.select("strong.ContentTitolo");
-				for (Iterator<Element> i = strongs.iterator(); i.hasNext();) {
-					text += i.next().text() + "-";
-				}
-				group.children().remove();
-				text += group.text().replace(":", "");
-				groupData.add(text);
-			}
-
-			Elements forms = fieldset.select("form");
-			for (int i = 0; i < forms.size(); i++) {
-				Iscrizione esame = new Iscrizione();
-				List<Object> children = new ArrayList<Object>();
-				childData.add(children);
-				children.add(esame);
-
-				Element form = forms.get(i);
-				url = form.attr("action");
-				Elements inputs = form.select("input");
-
-				for (Element input : inputs)
-					esame.addParam(input.attr("name"), input.attr("value"));
-
-				Elements trs = form.select("table").select("tr");
-				String action = esame.getParam("azione");
-
-				if (action.equals("INSERT")) {
-					esame.setRegister(false);
-					esame.clearTypes();
-					Elements options = form.select("select>option");
-					for (Element option : options)
-						esame.addType(option.text());
-
-					Elements tds = trs.get(0).select("td.Content_Chiaro");
-					esame.setData(tds.get(0).text());
-					String iscrtt = tds.get(1).text();
-					if (tds.get(1).select("input[type=submit]").isEmpty()) {
-						esame.setEnable(false);
-						iscrtt = iscrtt.replace("Iscrizioni chiuse", "");
+			if (fieldset != null) {
+				Element legend = fieldset.select("legend").first();
+				if (legend != null) {
+					try {
+						String s[] = legend.text().split(" - ");
+						corso.setText(s[0]);
+						esame.setText(s[1]);
+					} catch (Exception e) {
+						if (DEBUG)
+							Log.e(TAG, "Error retriveData(): " + e.getMessage());
 					}
-					esame.setIscritti(iscrtt);
-
-					tds = trs.get(2).select("td.Content_Chiaro");
-					esame.setLuogo(tds.text());
-
-					tds = trs.get(3).select("td.Content_Chiaro");
-					esame.setVerbalizzazione(tds.text());
 				}
 
-				// Se sono gi� iscritto all'esame
-				if (action.equals("DELETE")) {
-					esame.setRegister(true);
-					Elements tds = trs.get(0).select("td.Content_Chiaro");
-					esame.setNumero(tds.get(0).text());
-					String iscrtt = tds.get(1).text();
-					if (tds.get(1).select("input[type=submit]").isEmpty()) {
-						esame.setEnable(false);
-						iscrtt = iscrtt.replace("Iscrizioni chiuse", "");
+				Elements groups = fieldset.select("p.provaDiesame");
+
+				for (Element group : groups) {
+					String text = "";
+					group = group.nextElementSibling();
+					Elements strongs = group.select("strong.ContentTitolo");
+					for (Iterator<Element> i = strongs.iterator(); i.hasNext();) {
+						text += i.next().text() + "-";
 					}
-					esame.setIscritti(iscrtt);
-					tds = trs.get(1).select("td.Content_Chiaro");
-					esame.setData(tds.text());
+					group.children().remove();
+					text += group.text().replace(":", "");
+					groupData.add(text);
+				}
 
-					tds = trs.get(2).select("td.Content_Chiaro");
-					esame.clearTypes();
-					esame.addType(tds.text());
-
-					tds = trs.get(3).select("td.Content_Chiaro");
-					esame.setLuogo(tds.text());
-
-					tds = trs.get(4).select("td.Content_Chiaro");
-					esame.setVerbalizzazione(tds.text());
+				Elements forms = fieldset.select("form");
+				for (int i = 0; i < forms.size(); i++) {
+					Element form = forms.get(i);
+					List<Object> children = new ArrayList<Object>();
+					childData.add(children);
+					children.add(new Iscrizione(form));
 				}
 			}
 		} catch (Exception e) {
-			Log.e(TAG, "Retrive data: " + e.getMessage());
-			e.printStackTrace();
+			if (DEBUG)
+				Log.e(TAG, "Retrive data: " + e.getMessage());
 		}
 		appelloHandler.sendEmptyMessage(INIT);
 	}
 
-	private void refreshPage() {
-		groupData.clear();
-		childData.clear();
-		page_HTML = cm.connection(ConnectionManager.SSOL, page_URL, null);
-	}
-	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == 1)
-			switch (resultCode) {
-			case Activity.RESULT_OK:
-				appelloHandler.sendEmptyMessage(SUCCESS);
-				break;
-			case Activity.RESULT_CANCELED:
-				Toast cancel = Toast.makeText(this, "Iscrizione NON avvenuta!", Toast.LENGTH_LONG);
-				cancel.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-				cancel.show();
-				break;
-			default:
-				showDialog(FAIL);
-				break;
-			}
+		refresh();
+	}
+
+	private void doUpdate(HashMap<String, String> params) {
+		showDialog(PROGRESS_DIALOG_ID);
+		new AppelloTask().execute(params);
+	}
+
+	private void onTaskCompleted() {
+		if(loadQuestionario)
+			appelloHandler.sendEmptyMessage(QUEST);
+		else
+			refresh();
+		removeDialog(PROGRESS_DIALOG_ID);
+		if (DEBUG)
+			Log.i(TAG, "Task complete.");
 	}
 
 	private Handler appelloHandler = new Handler() {
@@ -223,29 +211,25 @@ public class IscrizioneAppello extends ExpandableListActivity {
 				setListAdapter(el);
 				break;
 			case QUEST:
-				loadQuestionario = true;
 				Intent intent = new Intent(getApplicationContext(),
 						Questionario.class);
 				String pkg = getPackageName();
-				// setto i dati ricavati dal login
 				intent.putExtra(pkg + ".page", page_HTML);
 				startActivityForResult(intent, 1);
 				break;
-			case SUCCESS:
-				try {
-					refreshPage();
-					retrieveData();
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage());
-				}
-				break;
-			case FAIL:
+			case ERROR_MESSAGE:
+				showDialog(ERROR_DIALOG_ID);
 				break;
 			default:
 				break;
 			}
 		}
 	};
+
+	private void showErrorMessage(String msg) {
+		allertDialog.setMessage(msg);
+		appelloHandler.sendEmptyMessage(ERROR_MESSAGE);
+	}
 
 	public class MyExpandableListAdapter extends BaseExpandableListAdapter {
 
@@ -261,6 +245,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 
 		public MyExpandableListAdapter(Context context,
 				ArrayList<String> groups, ArrayList<List<Object>> children) {
+
 			this.context = context;
 			this.groupData = groups;
 			this.childData = children;
@@ -314,12 +299,15 @@ public class IscrizioneAppello extends ExpandableListActivity {
 
 				final Spinner spinner = (Spinner) convertView
 						.findViewById(R.id.sp_iscr);
+
 				adapter = new ArrayAdapter<String>(IscrizioneAppello.this,
 						android.R.layout.simple_spinner_item,
 						appello.getTypes());
 				spinner.setAdapter(adapter);
+
 				if (appello.isRegister())
 					spinner.setEnabled(false);
+
 				final ToggleButton b = (ToggleButton) convertView
 						.findViewById(R.id.tb_iscr_ok);
 
@@ -332,15 +320,13 @@ public class IscrizioneAppello extends ExpandableListActivity {
 					tv.setVisibility(View.INVISIBLE);
 					b.setOnClickListener(new OnClickListener() {
 
-						@SuppressWarnings("unchecked")
 						@Override
 						public void onClick(View v) {
 							b.setChecked(false);
-							appello.addParam("tipo_iscrizione", spinner
+							appello.addParams("tipo_iscrizione", spinner
 									.getSelectedItem().toString());
-
-							new IscrizioneAsyncTask().execute(appello
-									.getParams());
+							iscrizione_URL = appello.getUrl();
+							doUpdate(appello.getParams());
 						}
 					});
 				} else {
@@ -376,6 +362,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 		@Override
 		public View getGroupView(int groupPosition, boolean isExpanded,
 				View convertView, ViewGroup parent) {
+
 			String group = (String) getGroup(groupPosition);
 			if (convertView == null) {
 				LayoutInflater infalInflater = (LayoutInflater) context
@@ -421,48 +408,53 @@ public class IscrizioneAppello extends ExpandableListActivity {
 
 	}
 
-	public class IscrizioneAsyncTask extends
-			AsyncTask<HashMap<String, String>, Boolean, Boolean> {
-
-		private ProgressDialog progressDialog;
-
-		@Override
-		protected void onPreExecute() {
-			progressDialog = ProgressDialog.show(IscrizioneAppello.this,
-					"Please wait...", "Loading data ...", true);
-		}
-
-		@Override
-		protected void onPostExecute(Boolean isSuccess) {
-			if (isSuccess)
-				appelloHandler.sendEmptyMessage(SUCCESS);
-			else if (!loadQuestionario)
-				appelloHandler.sendEmptyMessage(FAIL);
-			progressDialog.dismiss();
-		}
-
-		@Override
-		protected Boolean doInBackground(HashMap<String, String>... params) {
-			if (params != null && params.length > 0)
-				return iscrizione(SsolHttpClient.AUTH_URI + url, params[0]);
-
-			return false;
-		}
-
-		private boolean iscrizione(String link, HashMap<String, String> params) {
-			if (Utils.isLink(link)) {
-				loadQuestionario = false;
-				page_HTML = cm.connection(ConnectionManager.SSOL, link, params);
-				if (page_HTML.contains("Questionario"))
-					appelloHandler.sendEmptyMessage(QUEST);
-				else {
-					refreshPage();
-					return true;
-				}
+	private void refresh(){
+		groupData.clear();
+		childData.clear();
+		loadQuestionario = false;
+		page_HTML = ConnectionManager.getInstance().connection(ConnectionManager.SSOL, page_URL, null);
+		runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				retrieveData();
 			}
+		});
+	}
+	
+	private class AppelloTask extends
+			AsyncTask<HashMap<String, String>, Void, Void> {
 
-			return false;
+		private ConnectionManager cm;
+
+		public AppelloTask() {
+			cm = ConnectionManager.getInstance();
 		}
 
+		@Override
+		protected void onPostExecute(Void success) {
+			super.onPostExecute(success);
+			onTaskCompleted();
+		}
+
+		@Override
+		protected Void doInBackground(HashMap<String, String>... params) {
+			if (Utils.isNetworkAvailable(IscrizioneAppello.this)) {
+				if (params != null && params.length > 0)
+					iscrizione(params[0]);
+			} else {
+				cm.setLogged(false);
+				showErrorMessage("Connessione NON attiva!");
+			}
+			return (null);
+		}
+
+		private void iscrizione(HashMap<String, String> params) {
+			if (Utils.isLink(iscrizione_URL) && !isCancelled()) {
+				loadQuestionario = false;
+				page_HTML = cm.connection(ConnectionManager.SSOL, iscrizione_URL, params);
+				if (page_HTML != null && page_HTML.contains("Questionario")) 
+					loadQuestionario = true;
+			}
+		}
 	}
 }

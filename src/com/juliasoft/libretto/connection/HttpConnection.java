@@ -27,7 +27,8 @@ import android.util.Log;
 
 public class HttpConnection implements Runnable {
 
-	public static final String TAG = HttpConnection.class.getName();
+	private static final boolean DEBUG = true;
+	private static final String TAG = HttpConnection.class.getName();
 
 	public static final int GET = 0;
 	public static final int POST = 1;
@@ -55,7 +56,8 @@ public class HttpConnection implements Runnable {
 		this.httpClient = httpClient;
 	}
 
-	public void create(int method, String url, Map<String, String> headers, Map<String, String> params) {
+	public void create(int method, String url, Map<String, String> headers,
+			Map<String, String> params) {
 		this.method = method;
 		this.url = url;
 		this.headers = headers;
@@ -91,11 +93,14 @@ public class HttpConnection implements Runnable {
 				throw new AssertionError("");
 			}
 		} catch (ClientProtocolException e) {
-			Log.e(TAG, CLIENT_PROTOCOL_EXCEPTION + ": " + e.getMessage());
+			if(DEBUG)
+				Log.e(TAG, CLIENT_PROTOCOL_EXCEPTION + ": " + e.getMessage());
 		} catch (IOException e) {
-			Log.e(TAG, IO_EXCEPTION + ": " + e.getMessage());
+			if(DEBUG)
+				Log.e(TAG, IO_EXCEPTION + ": " + e.getMessage());
 		} catch (Exception e) {
-			Log.e(TAG, "Error: " + e.getMessage());
+			if(DEBUG)
+				Log.e(TAG, "Connection error: " + e.getMessage());
 		}
 	}
 
@@ -110,12 +115,14 @@ public class HttpConnection implements Runnable {
 			List<NameValuePair> postParams = new ArrayList<NameValuePair>();
 
 			for (Map.Entry<String, String> entry : params.entrySet())
-				postParams.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+				if (entry.getValue() != null && entry.getValue() != "")
+					postParams.add(new BasicNameValuePair(entry.getKey(), entry
+							.getValue()));
 
 			post.setEntity(new UrlEncodedFormEntity(postParams, HTTP.UTF_8));
 		}
 	}
-	
+
 	public List<Cookie> getCookies() {
 		return httpClient.getCookieStore().getCookies();
 	}
@@ -134,15 +141,15 @@ public class HttpConnection implements Runnable {
 			httpClient.getConnectionManager().shutdown();
 		response = null;
 	}
-	
-	public int getStatusCode(){
+
+	public int getStatusCode() {
 		return response == null ? -1 : response.getStatusLine().getStatusCode();
 	}
 
 	public HttpEntity getEntity() throws LoginException, ConnectException {
 		if (response == null)
 			throw new ConnectException(CONNECT_EXCEPTION);
-		
+
 		int status_code = getStatusCode();
 		switch (status_code) {
 		case HttpURLConnection.HTTP_OK:
@@ -164,7 +171,8 @@ public class HttpConnection implements Runnable {
 			throw new ConnectException(HTTP_UNAVAILABLE_EXCEPTION);
 		default:
 			consumeContent();
-			throw new ConnectException(HTTP_DEFAULT_EXCEPTION + "\nStatus code: " + status_code);
+			throw new ConnectException(HTTP_DEFAULT_EXCEPTION
+					+ "\nStatus code: " + status_code);
 		}
 	}
 }
