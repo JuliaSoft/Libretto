@@ -6,7 +6,7 @@
 
     <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
+        android:layout_height="wrap_content" >
 
         <!-- Header Starts -->
 
@@ -21,29 +21,26 @@
             <!-- Logo Start -->
 
             <ImageView
-                android:id="@+id/imageView1"
+                android:id="@+id/logo"
                 android:layout_width="97dp"
-                android:layout_height="71dp"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/desc"
                 android:paddingLeft="5dip"
                 android:src="@drawable/logo" />
 
             <!-- Logo Ends -->
 
             <TextView
-                android:id="@+id/textView1"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignTop="@+id/imageView1"
-                android:layout_marginTop="0dp"
-                android:layout_toRightOf="@+id/imageView1"
-                android:text="Accesso al libretto universitario di Verona"
-                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:layout_height="match_parent"
+                android:layout_toRightOf="@+id/logo"
                 android:paddingLeft="10dp"
                 android:paddingTop="14dp"
+                android:text="@string/header_msg"
+                android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="15sp"
                 android:typeface="serif" />
-
         </RelativeLayout>
 
         <!-- Header Ends -->
@@ -57,19 +54,21 @@
             android:background="@layout/footer_login" >
 
             <TextView
-                android:id="@+id/textView3"
+                android:id="@+id/footer_message"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
                 android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
                 android:padding="5dp"
-                android:text="by Davide Vallicella for http://www.juliasoft.com"
+                android:text="@string/footer_msg"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="#000000"
                 android:textSize="12sp"
                 android:typeface="serif" />
         </RelativeLayout>
         <!-- Footer Ends -->
+
+
         <!-- Login Form -->
 
         <LinearLayout
@@ -88,7 +87,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dip"
                 android:layout_marginTop="5dip"
-                android:hint="user id"
+                android:hint="@string/user_id"
                 android:imeActionLabel="Next"
                 android:imeOptions="actionNext"
                 android:singleLine="true" />
@@ -98,29 +97,27 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
-                android:hint="password"
+                android:hint="@string/password"
                 android:imeActionLabel="Next"
-                android:imeOptions="actionNext"
-                android:password="true"
+                android:imeOptions="actionDone"
+                android:inputType="textPassword"
                 android:singleLine="true" />
-            <!-- Login button -->
 
             <CheckBox
                 android:id="@+id/id_remember_up"
                 android:layout_width="143dp"
                 android:layout_height="wrap_content"
-                android:imeActionLabel="Next"
-                android:imeOptions="actionNext"
                 android:paddingLeft="40dp"
-                android:text="Stay signed in" />
+                android:text="@string/stay_signed" />
+
+            <!-- Login button -->
 
             <Button
                 android:id="@+id/login"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dip"
-                android:imeOptions="actionDone"
-                android:text="Login" />
+                android:text="@string/login" />
         </LinearLayout>
     </RelativeLayout>
 

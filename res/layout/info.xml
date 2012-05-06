@@ -2,48 +2,50 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="#c2ac79"
     android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/info_user"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dip"
-        android:layout_marginTop="10dip"
-        android:text="@string/utente"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="#5a412c"
-        android:textSize="20sp"
-        android:textStyle="bold" >
-    </TextView>
+        android:layout_gravity="center_vertical|left"
+        android:background="#c2ac79"
+        android:gravity="center|left"
+        android:minHeight="80dp"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/info_user"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dip"
+            android:layout_marginTop="10dip"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#000000"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/info_matricola"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dip"
+            android:layout_marginTop="2dip"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#0d3d64"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <TextView
-        android:id="@+id/info_matricola"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dip"
-        android:layout_marginTop="2dip"
-        android:text="matricola"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="#0d3d64"
-        android:textSize="14sp"
-        android:textStyle="bold" >
-    </TextView>
-
-    <TextView
-        android:id="@+id/textView3"
         android:layout_width="match_parent"
         android:layout_height="30dip"
-        android:layout_marginTop="10dip"
         android:background="#3a3f1e"
         android:gravity="center_vertical"
         android:paddingLeft="15dip"
-        android:text="Informazioni sullo studente"
+        android:text="@string/info_title"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="#E18E2C"
-        android:textStyle="bold" >
-    </TextView>
+        android:textStyle="bold" />
 
     <ScrollView
         android:layout_width="fill_parent"
@@ -58,14 +60,13 @@
             android:paddingBottom="15dp" >
 
             <TextView
-                android:id="@+id/textView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="15dp"
                 android:scrollbars="vertical"
-                android:text="Anno Accademico"
+                android:text="@string/info_anno_accademico"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -78,18 +79,16 @@
                 android:layout_marginLeft="35dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/TextView02"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Stato Carriera"
+                android:text="@string/info_stato_carriera"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -102,19 +101,17 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" >
             </TextView>
 
             <TextView
-                android:id="@+id/TextView04"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Corso"
+                android:text="@string/info_corso"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -127,18 +124,16 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/TextView06"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Facoltà"
+                android:text="@string/info_facolt_"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -151,19 +146,17 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" >
             </TextView>
 
             <TextView
-                android:id="@+id/TextView08"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Percorso"
+                android:text="@string/info_percorso"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -176,19 +169,17 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" >
             </TextView>
 
             <TextView
-                android:id="@+id/TextView10"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Durata"
+                android:text="@string/info_durata"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -201,18 +192,16 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/TextView12"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Anno di corso"
+                android:text="@string/info_anno_di_corso"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -225,18 +214,16 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
-            
+
             <TextView
-                android:id="@+id/TextView12"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Ordinamento"
+                android:text="@string/info_ordinamento"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -249,18 +236,16 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
-            
+
             <TextView
-                android:id="@+id/TextView12"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Normativa"
+                android:text="@string/info_normativa"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -273,18 +258,16 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
-            
+
             <TextView
-                android:id="@+id/TextView12"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dip"
                 android:layout_marginRight="5dip"
                 android:layout_marginTop="15dip"
-                android:text="Data immatricolazione"
+                android:text="@string/info_data_immatricolazione"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -297,10 +280,8 @@
                 android:layout_marginLeft="35dip"
                 android:layout_marginRight="10dip"
                 android:layout_marginTop="5dip"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
-            
         </LinearLayout>
     </ScrollView>
 

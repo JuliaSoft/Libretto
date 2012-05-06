@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/mitem01"
+        android:id="@+id/libretto_menu_statistiche"
         android:title="Statistiche"/>
     <item
-        android:id="@+id/mitem03"
+        android:id="@+id/libretto_menu_update"
         android:title="Aggiorna da server"/>
 
 </menu>

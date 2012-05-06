@@ -1,8 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World!</string>
     <string name="app_name">Libretto</string>
-    <string name="utente">Utente</string>
+    <string name="dett_esame_title">Dettagli esame</string>
+    <string name="anno_di_corso">Anno di corso</string>
+    <string name="a_a_freq">A.A. di frequenza</string>
+    <string name="peso_crediti">Peso in crediti</string>
+    <string name="data_esame">Data esame</string>
+    <string name="voto">Voto/Giudizio</string>
+    <string name="ricon">Riconosciuta</string>
+    <string name="q_val">Q.Val.</string>
+    <string name="button_back">Back</string>
+    <string name="desc"/>
+    <string name="footer_msg">by Davide Vallicella for http://www.juliasoft.com</string>
+    <string name="user_id">user id</string>
+    <string name="password">password</string>
+    <string name="login">Login</string>
+    <string name="header_msg">Accesso al libretto universitario di Verona</string>
+    <string name="stay_signed">Stay signed in</string>
+    <string name="info_anno_accademico">Anno Accademico</string>
+    <string name="info_stato_carriera">Stato Carriera</string>
+    <string name="info_corso">Corso</string>
+    <string name="info_facolt_">Facoltà</string>
+    <string name="info_percorso">Percorso</string>
+    <string name="info_durata">Durata</string>
+    <string name="info_anno_di_corso">Anno di corso</string>
+    <string name="info_ordinamento">Ordinamento</string>
+    <string name="info_normativa">Normativa</string>
+    <string name="info_data_immatricolazione">Data immatricolazione</string>
+    <string name="info_title">Informazioni sullo studente</string>
+    <string name="appello_group_tipo_di_prova">Tipo di prova</string>
+    <string name="appello_group_data">Data</string>
+    <string name="appello_group_ora">Ora</string>
+    <string name="appello_group_note">Note</string>
+    <string name="questionario_title">Questionario</string>
 
 </resources>
