@@ -56,7 +56,7 @@ public class Info extends Activity {
 		TextView annoAccademico = (TextView) findViewById(R.id.info_annoAccademico);
 		TextView statoCariera = (TextView) findViewById(R.id.info_statoCarriera);
 		TextView corso = (TextView) findViewById(R.id.info_corso);
-		TextView facoltà = (TextView) findViewById(R.id.info_facolta);
+		TextView facolta = (TextView) findViewById(R.id.info_facolta);
 		TextView percorso = (TextView) findViewById(R.id.info_percorso);
 		TextView durata = (TextView) findViewById(R.id.info_durata);
 		TextView annoDiCorso = (TextView) findViewById(R.id.info_annoDiCorso);
@@ -72,7 +72,7 @@ public class Info extends Activity {
 		listView.add(annoAccademico);
 		listView.add(statoCariera);
 		listView.add(corso);
-		listView.add(facoltà);
+		listView.add(facolta);
 		listView.add(percorso);
 		listView.add(durata);
 		listView.add(annoDiCorso);
@@ -127,7 +127,7 @@ public class Info extends Activity {
 					for (Element e : aa_sc)
 						listInfo.add(e.text());
 
-					// Corso, facoltà e percorso
+					// Corso, facoltï¿½ e percorso
 
 					Elements cor_fac_per = statoStudente.select("p#textStatusStudenteCorsoFac>b");
 					for (Element e : cor_fac_per)
