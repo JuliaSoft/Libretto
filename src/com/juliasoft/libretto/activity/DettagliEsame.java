@@ -90,7 +90,7 @@ public class DettagliEsame extends Activity {
 		data_esame.setText(intent.getStringExtra(pkg + ".data_esame"));
 		voto.setText(intent.getStringExtra(pkg + ".voto"));
 		ric.setText(intent.getStringExtra(pkg + ".ric"));
-		q_val.setText(intent.getStringExtra(pkg + ".img"));
+		q_val.setText(intent.getStringExtra(pkg + ".q_val"));
 		img.setImageBitmap(downloadBitmap(intent.getStringExtra(pkg + ".img")));
 
 		initDialog();
