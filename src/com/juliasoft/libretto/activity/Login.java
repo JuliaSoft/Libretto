@@ -1,19 +1,16 @@
 package com.juliasoft.libretto.activity;
 
-import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.security.auth.login.LoginException;
-
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -29,6 +26,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -41,13 +39,15 @@ import com.juliasoft.libretto.utils.Utils;
 
 public class Login extends Activity {
 
+	private static final boolean DEBUG = true;
+	private static final String TAG = Login.class.getName();
+
 	private static final int SUCCESS = 0;
-	private static final int CONNECTION_ERROR = 1;
-	private static final int LOGIN_ERROR = 2;
-	private static final int IO_ERROR = 3;
-	private static final int SHOW_DIALOG = 4;
-	private static final int CONTEXT_MENU_ID = 5;
-	private static final int ERROR_MESSAGE = 6;
+	private static final int ERROR_MESSAGE = 1;
+	private static final int USER_ID_MENU = 2;
+	private static final int ERROR_DIALOG_ID = 3;
+	private static final int MENU_DIALOG_ID = 4;
+	private static final int PROGRESS_DIALOG_ID = 5;
 
 	private static final String PREFS_NAME = "Credentials";
 	private static final String PREF_USERNAME = "username";
@@ -55,15 +55,21 @@ public class Login extends Activity {
 	private static final String PREF_REMEMBER = "remember";
 
 	private ConnectionManager cm;
+	private LoginTask loginTask;
 	private Map<String, String> html_pages;
+	private SharedPreferences loginPreferences;
+	private SharedPreferences.Editor loginPrefsEditor;
 
-	private EditText uname;
-	private EditText pword;
-	private CheckBox remeb;
-	private IDContextMenu iconContextMenu;
-	private AlertDialog builder;
+	private EditText usernameEdit;
+	private EditText passwordEdit;
+	private CheckBox rememberCheck;
+	private Button signinButton;
+	private IDContextMenu idMenuDialog;
+	private AlertDialog allertDialog;
+	private ProgressDialog progressDialog;
 	private String username;
 	private String password;
+	private String url = Utils.TARGET_HOME;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,176 +78,238 @@ public class Login extends Activity {
 		init();
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == 1) {
+			switch (resultCode) {
+			case Activity.RESULT_OK:
+				doReset();
+				break;
+			default:
+				showErrorMessage("Errore durante la chiusura dell'activity. Reset ClientManager NON avvenuto!");
+				break;
+			}
+		}
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case MENU_DIALOG_ID:
+			return idMenuDialog.createMenu("Scegli matricola");
+		case ERROR_DIALOG_ID:
+			return allertDialog;
+		case PROGRESS_DIALOG_ID:
+			return progressDialog;
+		default:
+			return super.onCreateDialog(id);
+		}
+	}
+
+	private Handler loginHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+
+			switch (msg.what) {
+			case SUCCESS:
+				onLoginSuccess();
+				Intent tabActivitiy = new Intent(getApplicationContext(), TabBar.class);
+				startActivityForResult(tabActivitiy, 1);
+				break;
+			case ERROR_MESSAGE:
+				showDialog(ERROR_DIALOG_ID);
+				break;
+			case USER_ID_MENU:
+				showDialog(MENU_DIALOG_ID);
+				break;
+			default:
+				break;
+			}
+		}
+	};
+
 	private void init() {
 		html_pages = new HashMap<String, String>();
 
-		initUserNameEditTextWithConstraints();
-		initPasswordEditText();
-		initRememberPassword();
+		loginPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+		loginPrefsEditor = loginPreferences.edit();
+		Boolean saveLogin = loginPreferences.getBoolean(PREF_REMEMBER, false);
+
+		initUserNameEditTextWithConstraints(saveLogin);
+		initPasswordEditText(saveLogin);
+		initRememberPassword(saveLogin);
+		initDialog();
 		makeLoginPasswordRequired();
 		setLinkToJuliaSrl();
+	}
 
-		builder = new AlertDialog.Builder(this).setTitle("Login")
-				.setIcon(android.R.drawable.ic_dialog_alert).create();
-		builder.setButton("OK", new DialogInterface.OnClickListener() {
+	private void initDialog() {
+		progressDialog = new ProgressDialog(Login.this);
+		progressDialog.setTitle("Please wait...");
+		progressDialog.setMessage("Loading data ...");
+		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+					
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				loginTask.cancel(true);
+			}
+		});
+
+		allertDialog = new AlertDialog
+				.Builder(Login.this)
+				.setTitle("Login")
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.create();
+		allertDialog.setButton("OK", new DialogInterface.OnClickListener() {
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 			}
-
 		});
 
-		WindowManager.LayoutParams lp = builder.getWindow().getAttributes();
+		WindowManager.LayoutParams lp = allertDialog.getWindow().getAttributes();
 		lp.dimAmount = 0.5f;
 
-		builder.getWindow().setAttributes(lp);
-		builder.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		allertDialog.getWindow().setAttributes(lp);
+		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 	}
 
-	private void initRememberPassword() {
-		remeb = (CheckBox) findViewById(R.id.id_remember_up);
-		remeb.setChecked((Boolean) loadCredentials(PREF_REMEMBER));
+	private void initRememberPassword(boolean saveLogin) {
+		rememberCheck = (CheckBox) findViewById(R.id.id_remember_up);
+		rememberCheck.setChecked(saveLogin);
 	}
 
-	private void initPasswordEditText() {
-		pword = (EditText) findViewById(R.id.password);
-		pword.setText((CharSequence) loadCredentials(PREF_PASSWORD));
+	private void initPasswordEditText(boolean saveUser) {
+		passwordEdit = (EditText) findViewById(R.id.password);
+		if (saveUser)
+			passwordEdit.setText(loginPreferences.getString(PREF_PASSWORD, ""));
 	}
 
-	private void initUserNameEditTextWithConstraints() {
-		uname = (EditText) findViewById(R.id.username);
-		uname.setText((CharSequence) loadCredentials(PREF_USERNAME));
-		uname.addTextChangedListener(new TextWatcher() {
+	private void initUserNameEditTextWithConstraints(boolean savePass) {
+		usernameEdit = (EditText) findViewById(R.id.username);
+		usernameEdit.addTextChangedListener(new TextWatcher() {
 
 			@Override
-			public void afterTextChanged(Editable s) {
-			}
+			public void afterTextChanged(Editable s) {}
 
 			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-			}
+			public void beforeTextChanged(CharSequence s,
+										  int start,
+										  int count,
+										  int after) {}
 
 			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
+			public void onTextChanged(CharSequence s,
+									  int start, 
+									  int before,
+									  int count) {
+				
 				if (s.length() != 0 && !Pattern.matches("^[a-z0-9]+$", s))
-					uname.setError("Oops! Prefisso 'id', caratteri accettati a-z e 0-9");
+					usernameEdit.setError("Oops! Prefisso 'id', caratteri accettati a-z e 0-9");
 			}
 		});
+		
+		if (savePass)
+			usernameEdit.setText(loginPreferences.getString(PREF_USERNAME, ""));
+
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(usernameEdit.getWindowToken(), 0);
 	}
 
 	private void makeLoginPasswordRequired() {
-		Button login_B = (Button) findViewById(R.id.login);
-		login_B.setOnClickListener(new OnClickListener() {
+		signinButton = (Button) findViewById(R.id.login);
+		signinButton.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				if (uname.getText().length() == 0)
-					uname.setError("Required");
-				else if (pword.getText().length() == 0)
-					pword.setError("Required");
+
+				username = usernameEdit.getText().toString();
+				password = passwordEdit.getText().toString();
+
+				if (username.length() == 0)
+					usernameEdit.setError("Required");
+				else if (password.length() == 0)
+					passwordEdit.setError("Required");
 				else
-					new LoginTask().execute();
+					doLogin();
 			}
 		});
 	}
 
 	private void setLinkToJuliaSrl() {
-		TextView disclaimer = (TextView) findViewById(R.id.textView3);
+		TextView disclaimer = (TextView) findViewById(R.id.footer_message);
 		Linkify.addLinks(disclaimer, Linkify.ALL);
 	}
 
-	private boolean isOnline() {
-		return Utils.isNetworkAvailable(Login.this);
+	private void enableLogin() {
+		usernameEdit.setEnabled(true);
+		passwordEdit.setEnabled(true);
+		rememberCheck.setEnabled(true);
+		signinButton.setEnabled(true);
 	}
 
-	private void login() {
-		username = uname.getText().toString();
-		password = pword.getText().toString();
+	private void disableLogin() {
+		usernameEdit.setEnabled(false);
+		passwordEdit.setEnabled(false);
+		rememberCheck.setEnabled(false);
+		signinButton.setEnabled(false);
+	}
 
-		cm.setCredentials(username, password);
-		saveCredentials(remeb.isChecked());
+	private void doLogin() {
+		disableLogin();
+		showDialog(PROGRESS_DIALOG_ID);
+		loginTask = (LoginTask) new LoginTask().execute();
+	}
 
-		if (!isOnline()) {
-			cm.setLogged(false);
-			showMessage(CONNECTION_ERROR, "Connessione NON attiva!");
-		}
+	private void doReset() {
+		cm.reset();
+		html_pages.clear();
+		url = Utils.TARGET_HOME;
+	}
+
+	private void onTaskCompleted(boolean success) {
+		if (success)
+			loginHandler.sendEmptyMessage(SUCCESS);
 		else
-			try {
-				cm.authenticate();
-			} catch (ConnectException e) {
-				showMessage(CONNECTION_ERROR, e.getMessage());
-			} catch (LoginException e) {
-				showMessage(LOGIN_ERROR, e.getMessage());
-			}
+			doReset();
+
+		removeDialog(PROGRESS_DIALOG_ID);
+		enableLogin();
+		loginTask = null;
+		if (DEBUG)
+			Log.i(TAG, "Task complete.");
 	}
 
-	private void showMessage(int type, String msg) {
-		builder.setMessage(msg);
-		loginHandler.sendEmptyMessage(type);
-	}
-
-	private void saveCredentials(boolean value) {
-		if (value)
-			getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
-					.putString(PREF_USERNAME, username)
-					.putString(PREF_PASSWORD, password)
-					.putBoolean(PREF_REMEMBER, true).commit();
-		else
-			getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().clear().commit();
-	}
-
-	private Object loadCredentials(String key) {
-		SharedPreferences pref = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-		return key.equals(PREF_REMEMBER) ?
-			pref.getBoolean(key, false) : pref.getString(key, "");
-	}
-
-	private boolean initPage(String url) {
-		// Pagina libretto studente
-		String page_HTML = cm.connection(ConnectionManager.ESSE3, url, null);
-
-		if (isMultiID(page_HTML)) {
-			selectID(page_HTML);
-			return false;
+	private void onLoginSuccess() {
+		if (rememberCheck.isChecked()) {
+			loginPrefsEditor.putBoolean(PREF_REMEMBER, true);
+			loginPrefsEditor.putString(PREF_USERNAME, username);
+			loginPrefsEditor.putString(PREF_PASSWORD, password);
+			loginPrefsEditor.commit();
+		} else {
+			loginPrefsEditor.clear();
+			loginPrefsEditor.commit();
 		}
-		html_pages.put("LIB", page_HTML);
-
-		// Pagina informazioni studente
-		page_HTML = cm.connection(ConnectionManager.ESSE3, Utils.TARGET_INFO, null);
-		html_pages.put("INFO", page_HTML);
-
-		// Pagina iscrizione esami
-		page_HTML = cm.getSSOLLoginHTML();
-
-		Elements trs = Utils.jsoupSelect(page_HTML, "table.Border>tbody>tr");
-
-		if (trs.isEmpty()) {
-			// OLD
-			page_HTML = cm.connection(ConnectionManager.SSOL, Utils.TARGET_ISCRIZIONI_OLD, null);
-			html_pages.put("ISCRIZ_OLD", page_HTML);
-		}
-		else
-			// NEW
-			html_pages.put("ISCRIZ", page_HTML);
-
-		return true;
 	}
 
-	// ritorna true se l'utente deve scegliere tra pi� matricole
-	private boolean isMultiID(String page_HTML) {
-		return page_HTML == null ? false : page_HTML.contains("Scegli carriera");
+	private void showErrorMessage(String msg) {
+		allertDialog.setMessage(msg);
+		loginHandler.sendEmptyMessage(ERROR_MESSAGE);
 	}
 
-	// visualizza un menu con le matricole dell'utente(triennale, specialistica...)
 	private void selectID(String page_HTML) {
-		iconContextMenu = new IDContextMenu(this, CONTEXT_MENU_ID, new IDContextMenu.IconContextMenuOnClickListener() {
+		idMenuDialog = new IDContextMenu(this, MENU_DIALOG_ID, 
+				new IDContextMenu.IconContextMenuOnClickListener() {
 
-			@Override
-			public void onClick(final String url) {
-				new LoginTask().execute(url);
-			}
-		});
+					@Override
+					public void onClick(final String url) {
+						Login.this.url = url;
+						doLogin();
+
+					}
+				});
 
 		Resources res = getResources();
 
@@ -250,104 +318,53 @@ public class Login extends Activity {
 			if (a != null) {
 				String id = a.text();
 				String url = Esse3HttpClient.AUTH_URI + a.attr("href");
-				iconContextMenu.addItem(res, id, R.drawable.forward_arrow, url);
+				idMenuDialog.addItem(res, id, R.drawable.forward_arrow, url);
 			}
 		}
 
-		loginHandler.sendEmptyMessage(SHOW_DIALOG);
+		loginHandler.sendEmptyMessage(USER_ID_MENU);
 	}
 
-	// Handler serve per aggiornare la grafica
-	private Handler loginHandler = new Handler() {
-
-		@Override
-		public void handleMessage(Message msg) {
-
-			switch (msg.what) {
-			case SUCCESS:
-				Intent intent = new Intent(getApplicationContext(), TabBar.class);
-				String pkg = getPackageName();
-				// setto i dati ricavati dal login
-				intent.putExtra(pkg + ".lib", html_pages.get("LIB"));
-				intent.putExtra(pkg + ".info", html_pages.get("INFO"));
-				if (html_pages.containsKey("ISCRIZ"))
-					intent.putExtra(pkg + ".iscriz", html_pages.get("ISCRIZ"));
-				else if (html_pages.containsKey("ISCRIZ_OLD"))
-					intent.putExtra(pkg + ".iscriz_old", html_pages.get("ISCRIZ_OLD"));
-				startActivity(intent);
-				break;
-			case CONNECTION_ERROR:
-			case LOGIN_ERROR:
-			case IO_ERROR:
-				showDialog(ERROR_MESSAGE);
-				break;
-			case SHOW_DIALOG:
-				showDialog(CONTEXT_MENU_ID);
-				break;
-			default:
-				break;
-			}
-		}
-	};
-
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		switch (id) {
-		case CONTEXT_MENU_ID:
-			return iconContextMenu.createMenu("Scegli matricola");
-		case ERROR_MESSAGE:
-			return builder;
-		default:
-			return super.onCreateDialog(id);
-		}
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-
-		if (cm != null) {
-			cm.reset();
-			html_pages.clear();
-			Log.i("INFO", "Reset ClientManager!");
-		}
-	}
-
-	private class LoginTask extends AsyncTask<String, Void, Boolean> {
-
-		private final ProgressDialog dialog;
+	private class LoginTask extends AsyncTask<Void, Void, Boolean> {
 
 		public LoginTask() {
-			dialog = new ProgressDialog(Login.this);
-			dialog.setTitle("Please wait...");
-			dialog.setCancelable(true);
 			cm = ConnectionManager.getInstance();
-		}
-
-		@Override
-		protected void onPreExecute() {
-			dialog.setMessage("Loading data ...");
-			dialog.show();
+			cm.setCredentials(username, password);
 		}
 
 		@Override
 		protected void onPostExecute(final Boolean success) {
-			if (dialog.isShowing())
-				dialog.dismiss();
-
-			if (success)
-				loginHandler.sendEmptyMessage(SUCCESS);
+			super.onPostExecute(success);
+			onTaskCompleted(success);
 		}
 
 		@Override
-		protected Boolean doInBackground(final String... params) {
-			if (params != null && params.length > 0)
-				return initPage(params[0]);
+		protected Boolean doInBackground(final Void... params) {
+			if (Utils.isNetworkAvailable(Login.this)) {
+				if (!cm.isLogged() && !isCancelled()) {
+					try {
+						cm.authenticate();
+					} catch (Exception e) {
+						showErrorMessage(e.getMessage());
+					}
+				}
+				if (cm.isLogged() && !isCancelled()) {
+					String page_HTML = cm.connection(ConnectionManager.ESSE3, url, null);
+					if (isMultiID(page_HTML))
+						selectID(page_HTML);
+					else
+						return true;
+				}
+			} else {
+				cm.setLogged(false);
+				showErrorMessage("Connessione NON attiva!");
+			}
 
-			if (!cm.isLogged())
-				login();
+			return false;
+		}
 
-			return cm.isLogged() ? initPage(Utils.TARGET_LIBRETTO) : false;
+		private boolean isMultiID(String page_HTML) {
+			return page_HTML == null ? false : page_HTML.contains("Scegli carriera");
 		}
 	}
 }

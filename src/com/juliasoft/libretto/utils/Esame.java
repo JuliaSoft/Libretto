@@ -1,12 +1,12 @@
 package com.juliasoft.libretto.utils;
 
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import com.juliasoft.libretto.connection.Esse3HttpClient;
 
 public class Esame extends Row {
 
+	private final String id;
 	private final String annoCorso;
 	private final String aaFrequenza;
 	private final String numeroCrediti;
@@ -16,22 +16,10 @@ public class Esame extends Row {
 	private final String q_val;
 	private final String stato_gif;
 
-	public Esame(Element element) {
-		super (element.attr("nome"));
-
-		annoCorso = element.attr("annocorso");
-		aaFrequenza = element.attr("annofreq");
-		numeroCrediti = element.attr("crediti");
-		data = element.attr("data");
-		voto = element.attr("voto");
-		ric = element.attr("ric");
-		q_val = element.attr("qval");
-		stato_gif = element.attr("image");
-	}
-
-	public Esame(Elements tds) {
+	public Esame(Elements tds) {		
 		super(tds.get(2).text().split(" - ", 2)[1]);
 
+		id = tds.get(2).text().split(" - ", 2)[0];		
 		annoCorso = tds.get(1).text();
 		stato_gif = Esse3HttpClient.AUTH_URI + tds.get(8).select("img").first().attr("src");
 		aaFrequenza = tds.get(9).text();
@@ -42,6 +30,10 @@ public class Esame extends Row {
 		q_val = tds.get(15).text();
 	}
 
+	public String getId() {
+		return id;
+	}
+	
 	public String getAa_freq() {
 		return aaFrequenza;
 	}

@@ -5,7 +5,7 @@
     android:orientation="vertical" >
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|left"
         android:background="#c2ac79"
@@ -18,58 +18,52 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="15dip"
-            android:src="@drawable/superata" >
-        </ImageView>
+            android:contentDescription="@string/desc" />
 
         <TextView
             android:id="@+id/info_esame"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="5dip"
-            android:layout_weight="0.91"
             android:gravity="center_vertical"
-            android:maxLines="3"
+            android:maxLines="4"
             android:padding="5dp"
-            android:text="Esame"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textColor="#5a412c"
+            android:textColor="#000000"
             android:textSize="20sp"
-            android:textStyle="bold" >
-        </TextView>
+            android:textStyle="bold" />
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textView9"
         android:layout_width="match_parent"
         android:layout_height="30dip"
         android:background="#3a3f1e"
         android:gravity="center_vertical"
         android:paddingLeft="15dip"
-        android:text="Dettagli esame"
+        android:text="@string/dett_esame_title"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#E18E2C" >
-    </TextView>
+        android:textColor="#E18E2C"
+        android:textStyle="bold" />
 
     <ScrollView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:fillViewport="true" >
 
-         <LinearLayout
-             android:layout_width="fill_parent"
-             android:layout_height="wrap_content"
-             android:background="#d2cfb8"
-             android:orientation="vertical"
-             android:paddingBottom="15dp" >
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="#d2cfb8"
+            android:orientation="vertical"
+            android:paddingBottom="15dp" >
 
             <TextView
-                android:id="@+id/textView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="15dp"
-                android:text="Anno di corso:"
+                android:text="@string/anno_di_corso"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -82,18 +76,16 @@
                 android:layout_marginLeft="35dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/textView7"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="15dp"
-                android:text="AA di frequenza:"
+                android:text="@string/a_a_freq"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -106,18 +98,16 @@
                 android:layout_marginLeft="35dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/textView8"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="15dp"
-                android:text="Peso in crediti:"
+                android:text="@string/peso_crediti"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -130,18 +120,16 @@
                 android:layout_marginLeft="35dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/textView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="15dp"
-                android:text="Data esame:"
+                android:text="@string/data_esame"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -154,18 +142,16 @@
                 android:layout_marginLeft="35dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/textView23"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="15dp"
-                android:text="Voto/Giudizio:"
+                android:text="@string/voto"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -178,18 +164,16 @@
                 android:layout_marginLeft="35dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/textView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="15dp"
-                android:text="Riconosciuta:"
+                android:text="@string/ricon"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -202,18 +186,16 @@
                 android:layout_marginLeft="35dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/textView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="25dp"
                 android:layout_marginRight="5dp"
                 android:layout_marginTop="15dp"
-                android:text="Q.Val:"
+                android:text="@string/q_val"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="16sp"
@@ -226,7 +208,6 @@
                 android:layout_marginLeft="35dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="5dp"
-                android:text="TextView"
                 android:textColor="#0d3d64"
                 android:textSize="14sp" />
 
@@ -237,7 +218,7 @@
                 android:layout_marginLeft="15dip"
                 android:layout_marginRight="15dip"
                 android:layout_marginTop="30dip"
-                android:text="Back" />
+                android:text="@string/button_back" />
         </LinearLayout>
     </ScrollView>
 

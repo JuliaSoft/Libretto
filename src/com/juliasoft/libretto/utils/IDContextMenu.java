@@ -132,6 +132,7 @@ public class IDContextMenu implements DialogInterface.OnCancelListener, DialogIn
 
 	private final IconContextMenuOnClickListener clickHandler;
 
+	private boolean isShowing = false;
 	/**
 	 * constructor
 	 * 
@@ -153,6 +154,7 @@ public class IDContextMenu implements DialogInterface.OnCancelListener, DialogIn
 
 	private void cleanup() {
 		parentActivity.dismissDialog(dialogId);
+		isShowing = false;
 	}
 
 	/**
@@ -169,6 +171,7 @@ public class IDContextMenu implements DialogInterface.OnCancelListener, DialogIn
 			public void onClick(DialogInterface dialoginterface, int i) {
 				if (clickHandler != null)
 					clickHandler.onClick(((IconContextMenuItem) menuAdapter.getItem(i)).actionTag);
+				isShowing = false;
 			}
 		});
 
@@ -177,7 +180,12 @@ public class IDContextMenu implements DialogInterface.OnCancelListener, DialogIn
 		AlertDialog dialog = builder.create();
 		dialog.setOnCancelListener(this);
 		dialog.setOnDismissListener(this);
+		isShowing = true;
 		return dialog;
+	}
+	
+	public boolean isShowing(){
+		return isShowing;
 	}
 
 	@Override

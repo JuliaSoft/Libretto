@@ -29,7 +29,6 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/textView3"
         android:layout_width="match_parent"
         android:layout_height="30dip"
         android:background="#3a3f1e"

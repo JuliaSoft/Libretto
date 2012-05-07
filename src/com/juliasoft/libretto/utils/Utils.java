@@ -21,19 +21,19 @@ import android.util.Log;
 
 public class Utils {
 
+	private static final boolean DEBUG = true;
 	public static final String TAG = Utils.class.getName();
 	/********************************** LINK FACOLT� **********************************/
 	public static final String TARGET_LIBRETTO = Esse3HttpClient.AUTH_URI
 			+ "auth/studente/Libretto/LibrettoHome.do";
-	public static final String TARGET_INFO = Esse3HttpClient.AUTH_URI
+	public static final String TARGET_HOME = Esse3HttpClient.AUTH_URI
 			+ "auth/Home.do";
 	public static final String TARGET_PIANO_STUDIO = Esse3HttpClient.AUTH_URI
 			+ "auth/studente/Piani/PianiHome.do";
 	public static final String TARGET_ISCRIZIONI = SsolHttpClient.AUTH_URI
-			+ "main?ent=ieappellics";
+			+ "main?ent=libretto";
 	public static final String TARGET_ISCRIZIONI_OLD = SsolHttpClient.AUTH_URI
 			+ "main?ent=ieappellics";
-
 	/*
 	 * @return boolean return true if the application can access the internet
 	 */
@@ -46,17 +46,21 @@ public class Utils {
 				&& connectivity.getActiveNetworkInfo().isConnected()) {
 
 			try {
-				URLConnection httpConn = new URL("http://www.google.it").openConnection();
+				URLConnection httpConn = new URL("http://www.google.it")
+						.openConnection();
 				httpConn.setConnectTimeout(5000);
 				httpConn.connect();
-				Log.i(TAG, "ONLINE!");
+				if (DEBUG)
+					Log.d(TAG, "ONLINE!");
 				return true;
 			} catch (Exception e) {
-				Log.i(TAG, "OFFLINE!");
+				if (DEBUG)
+					Log.d(TAG, "OFFLINE!");
 				return false;
 			}
 		} else {
-			Log.i(TAG, "OFFLINE!");
+			if (DEBUG)
+				Log.d(TAG, "OFFLINE!");
 			return false;
 		}
 	}
@@ -77,13 +81,17 @@ public class Utils {
 			while ((line = in.readLine()) != null)
 				sb.append(line).append(NL);
 		} catch (IOException e) {
-			e.printStackTrace();
+			if (DEBUG)
+				Log.d(TAG,
+						"Error inputStreamToString(): Reader is closed or some other I/O error occurs.");
 		} finally {
 			if (in != null) {
 				try {
 					in.close();
 				} catch (IOException e) {
-					Log.e(TAG, "Error inputStreamToString(..): La connessione non � stata rilasciata!");
+					if (DEBUG)
+						Log.d(TAG,
+								"Error inputStreamToString(): The connection has not been released!");
 				}
 			}
 		}
@@ -92,7 +100,7 @@ public class Utils {
 	}
 
 	public static boolean isLink(String link) {
-		if(link == null || link.equals(""))
+		if (link == null || link.equals(""))
 			return false;
 
 		Pattern pattern = Pattern.compile("(http|https)\\://(.*?)");

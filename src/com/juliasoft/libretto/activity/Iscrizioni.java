@@ -3,18 +3,16 @@ package com.juliasoft.libretto.activity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.connection.SsolHttpClient;
-import com.juliasoft.libretto.utils.Appello;
-import com.juliasoft.libretto.utils.Utils;
-
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import android.R.color;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ExpandableListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -22,26 +20,40 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.juliasoft.libretto.connection.ConnectionManager;
+import com.juliasoft.libretto.connection.SsolHttpClient;
+import com.juliasoft.libretto.utils.Appello;
+import com.juliasoft.libretto.utils.Utils;
+
 public class Iscrizioni extends ExpandableListActivity {
 
-	@SuppressWarnings("unused")
+	private static final boolean DEBUG = true;
 	private static final String TAG = Iscrizioni.class.getName();
-	private static final int INIT = 0;
-	private static final int METHOD_DRAW_SELECTOR_ON_TOP = 1;
 
-	private ConnectionManager cm;
+	private static final int INIT = 0;
+	private static final int SUCCESS = 1;
+	private static final int ERROR_MESSAGE = 2;
+	private static final int ERROR_DIALOG_ID = 3;
+	private static final int PROGRESS_DIALOG_ID = 4;
+
+	private IscrizioniTask iscrizioniTask;
 	private ArrayList<String> groupData;
 	private ArrayList<List<Object>> childData;
-	private int mMethod;
+	private String page_URL;
+	private String page_HTML;
 	private String type;
+	private AlertDialog allertDialog;
+	private ProgressDialog progressDialog;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -50,106 +62,34 @@ public class Iscrizioni extends ExpandableListActivity {
 		init();
 	}
 
-	private void changeMethod(int method) {
-		if (mMethod != method) {
-			switch (method) {
-			case METHOD_DRAW_SELECTOR_ON_TOP:
-				mMethod = METHOD_DRAW_SELECTOR_ON_TOP;
-				getExpandableListView().setSelector(
-						R.drawable.list_selector_on_top);
-				getExpandableListView().setDrawSelectorOnTop(true);
-				break;
-			default:
-				// Do nothing : this value is not handled
-				break;
-			}
-			getExpandableListView().invalidateViews();
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case ERROR_DIALOG_ID:
+			return allertDialog;
+		case PROGRESS_DIALOG_ID:
+			return progressDialog;
+		default:
+			return super.onCreateDialog(id);
 		}
 	}
 
-	private void init() {
-		Intent intent = getIntent();
-		String pkg = getPackageName();
-		String page_HTML = intent.getStringExtra(pkg + ".iscriz");
-		type = intent.getStringExtra(pkg + ".type");
-		cm = ConnectionManager.getInstance();
-		groupData = new ArrayList<String>();
-		childData = new ArrayList<List<Object>>();
-
-		changeMethod(METHOD_DRAW_SELECTOR_ON_TOP);
-
-		new MyAsyncTask(false).execute(page_HTML);
-	}
-
-	private void retrieveData(String page_HTML) {
-		if (page_HTML == null)
-			return;
-
-		if ("OLD".equals(type)) {
-			String esame = Utils
-				.jsoupSelect(page_HTML, "select.TopTabText[name=id_insegn]>option[selected=selected]").text();
-			groupData.add(esame.toUpperCase());
-			List<Object> children = new ArrayList<Object>();
-			childData.add(children);
-
-			page_HTML = Utils.removeSpecialString(page_HTML, "&nbsp;");
-
-			// ciclo degli appelli per l'esame
-			for (Element fs : Utils.jsoupSelect(page_HTML, "fieldset"))
-				children.add(new Appello(fs));
-
-			return;
-		}
-
-		Elements trs = Utils.jsoupSelect(page_HTML, "table.Border>tbody>tr");
-
-		// ciclo degli esami da sostenere
-		for (Element tr : trs) {
-			Elements tds = tr.children();
-
-			groupData.add(tds.get(1).text());
-			List<Object> children = new ArrayList<Object>();
-			childData.add(children);
-
-			Elements input = tds.get(4).children();
-			if (input == null) {
-				children.add(null);
-				continue;
-			}
-
-			String link = "";
-			if (input.hasAttr("onclick")) {
-				link = SsolHttpClient.AUTH_URI
-						+ input.attr("onclick").split("'")[1];
-			}
-
-			// se l'iscrizione all'esame corrente Ã¨ aperta proseguo
-			if (Utils.isLink(link)) {
-				try {
-					page_HTML = cm.connection(ConnectionManager.SSOL, link, null);
-				} catch (Exception e) {
-					children.add(input.text());
-					continue;
-				}
-
-				page_HTML = Utils.removeSpecialString(page_HTML, "&nbsp;");
-
-				// ciclo degli appelli per l'esame
-				for (Element fs : Utils.jsoupSelect(page_HTML, "fieldset"))
-					children.add(new Appello(fs));
-			}
-		}
-	}
-
-	// Handler serve per aggiornare la grafica
 	private Handler iscrizioniHandler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
+			case SUCCESS:
+				Intent intent = new Intent(getApplicationContext(), IscrizioneAppello.class);
+				intent.putExtra(getPackageName() + ".page_HTML", page_HTML);
+				intent.putExtra(getPackageName() + ".page_URL", page_URL);
+				startActivity(intent);
+				break;
 			case INIT:
-				MyExpandableListAdapter e = new MyExpandableListAdapter(
-						Iscrizioni.this, groupData, childData);
+				IscrizioniAdapter e = new IscrizioniAdapter(Iscrizioni.this, groupData, childData);
 				setListAdapter(e);
+				break;
+			case ERROR_MESSAGE:
+				showDialog(ERROR_DIALOG_ID);
 				break;
 			default:
 				break;
@@ -157,20 +97,86 @@ public class Iscrizioni extends ExpandableListActivity {
 		}
 	};
 
-	public class MyExpandableListAdapter extends BaseExpandableListAdapter {
+	private void init() {
+		Intent intent = getIntent();
+		type = intent.getStringExtra(getPackageName() + ".parent") != null ? "OLD" : "NEW";
+		page_HTML = intent.getStringExtra(getPackageName() + ".page_HTML");
 
-		@Override
-		public boolean areAllItemsEnabled() {
-			return true;
-		}
+		groupData = new ArrayList<String>();
+		childData = new ArrayList<List<Object>>();
+
+		getExpandableListView().setSelector(R.drawable.list_selector_on_top);
+		getExpandableListView().setDrawSelectorOnTop(true);
+		getExpandableListView().invalidateViews();
+
+		initDialog();
+		doUpdate(false);
+	}
+
+	private void initDialog() {
+		progressDialog = new ProgressDialog(Iscrizioni.this);
+		progressDialog.setTitle("Please wait...");
+		progressDialog.setMessage("Loading data ...");
+		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+					
+			@Override
+			public void onCancel(DialogInterface dialog) {
+				iscrizioniTask.cancel(true);
+			}
+		});
+
+		allertDialog = new AlertDialog
+				.Builder(Iscrizioni.this)
+				.setTitle("Iscrizioni")
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.create();
+		allertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+
+		WindowManager.LayoutParams lp = allertDialog.getWindow().getAttributes();
+		lp.dimAmount = 0.5f;
+
+		allertDialog.getWindow().setAttributes(lp);
+		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+	}
+
+	private void doUpdate(boolean connect) {
+		showDialog(PROGRESS_DIALOG_ID);
+		iscrizioniTask = (IscrizioniTask) new IscrizioniTask(connect).execute();
+	}
+
+	private void showErrorMessage(String msg) {
+		allertDialog.setMessage(msg);
+		iscrizioniHandler.sendEmptyMessage(ERROR_MESSAGE);
+	}
+
+	private void onTaskCompleted(boolean connect) {
+		if (connect)
+			iscrizioniHandler.sendEmptyMessage(SUCCESS);
+		else
+			iscrizioniHandler.sendEmptyMessage(INIT);
+
+		removeDialog(PROGRESS_DIALOG_ID);
+		iscrizioniTask = null;
+		if (DEBUG)
+			Log.i(TAG, "Task complete.");
+	}
+
+	public class IscrizioniAdapter extends BaseExpandableListAdapter {
 
 		private Context context;
+		private List<String> groupData;
+		private List<List<Object>> childData;
 
-		List<String> groupData = new ArrayList<String>();
-		List<List<Object>> childData = new ArrayList<List<Object>>();
-
-		public MyExpandableListAdapter(Context context,
-				ArrayList<String> groups, ArrayList<List<Object>> children) {
+		public IscrizioniAdapter(Context context,
+								 ArrayList<String> groups,
+								 ArrayList<List<Object>> children) {
+			
 			this.context = context;
 			this.groupData = groups;
 			this.childData = children;
@@ -186,30 +192,25 @@ public class Iscrizioni extends ExpandableListActivity {
 			return childPosition;
 		}
 
-		// Return a child view. You can load your custom layout here.
-
 		@Override
-		public View getChildView(int groupPosition, int childPosition,
-				boolean isLastChild, View convertView, ViewGroup parent) {
+		public View getChildView(int groupPosition, 
+								 int childPosition,
+								 boolean isLastChild, 
+								 View convertView, 
+								 ViewGroup parent) {
 
 			Object obj = getChild(groupPosition, childPosition);
 
+			LayoutInflater infalInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
 			if (obj instanceof String) {
-				LayoutInflater infalInflater = (LayoutInflater) context
-						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				convertView = infalInflater.inflate(R.layout.iscriz_item, null);
 
-				TextView tv = (TextView) convertView.findViewById(R.id.tv_iscr);
+				TextView tv = (TextView) convertView.findViewById(R.id.iscrizioni_closed_item);
 				tv.setText((CharSequence) obj);
 
-				return convertView;
-			}
-
-			if (obj instanceof Appello) {
-				LayoutInflater infalInflater = (LayoutInflater) context
-						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				convertView = infalInflater.inflate(
-						R.layout.dettagli_appelli_item, null);
+			} else if (obj instanceof Appello) {
+				convertView = infalInflater.inflate(R.layout.dettagli_appelli_item, null);
 
 				Appello appello = (Appello) obj;
 
@@ -225,15 +226,15 @@ public class Iscrizioni extends ExpandableListActivity {
 				tv = (TextView) convertView.findViewById(R.id.doc_id);
 				tv.setText(Html.fromHtml(appello.getDocenti()));
 				Button b = (Button) convertView.findViewById(R.id.prosegui_id);
-				final String link = appello.getLink();
+				String link = appello.getLink();
 
 				if (Utils.isLink(link)) {
-
+					page_URL = link;
 					b.setOnClickListener(new OnClickListener() {
 
 						@Override
 						public void onClick(View v) {
-							new MyAsyncTask(true).execute(link);
+							doUpdate(true);
 						}
 					});
 				} else {
@@ -243,8 +244,6 @@ public class Iscrizioni extends ExpandableListActivity {
 					tv.setTextColor(color.black);
 				}
 			}
-			convertView
-					.setBackgroundResource(R.drawable.list_item_background_special);
 
 			return convertView;
 		}
@@ -269,23 +268,29 @@ public class Iscrizioni extends ExpandableListActivity {
 			return groupPosition;
 		}
 
-		// Return a group view. You can load your custom layout here.
 		@Override
-		public View getGroupView(int groupPosition, boolean isExpanded,
-				View convertView, ViewGroup parent) {
+		public View getGroupView(int groupPosition,
+								 boolean isExpanded,
+								 View convertView, 
+								 ViewGroup parent) {
+			
 			String group = (String) getGroup(groupPosition);
 			if (convertView == null) {
-				LayoutInflater infalInflater = (LayoutInflater) context
-						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				convertView = infalInflater
-						.inflate(R.layout.appelli_item, null);
+				LayoutInflater infalInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				convertView = infalInflater.inflate(R.layout.appelli_item, null);
 			}
 
 			TextView tv = (TextView) convertView.findViewById(R.id.tvGroup);
 			tv.setPadding(45, 0, 0, 0);
 			tv.setTextColor(Color.BLACK);
 			tv.setText(group);
+			
 			return convertView;
+		}
+
+		@Override
+		public boolean areAllItemsEnabled() {
+			return true;
 		}
 
 		@Override
@@ -299,47 +304,89 @@ public class Iscrizioni extends ExpandableListActivity {
 		}
 	}
 
-	public class MyAsyncTask extends AsyncTask<String, Void, Void> {
-		private ProgressDialog progressDialog;
-		private final boolean connect;
-		private String url;
-		private String pageData;
+	public class IscrizioniTask extends AsyncTask<Void, Void, Void> {
 
-		public MyAsyncTask(boolean connect) {
+		private ConnectionManager cm;
+		private final boolean connect;
+
+		public IscrizioniTask(boolean connect) {
+			cm = ConnectionManager.getInstance();
 			this.connect = connect;
 		}
 
 		@Override
-		protected void onPreExecute() {
-			progressDialog = ProgressDialog.show(Iscrizioni.this, "Please wait...", "Loading data ...", true);
-		}
-
-		@Override
 		protected void onPostExecute(Void result) {
-			if (connect) {
-				Intent intent = new Intent(getApplicationContext(), IscrizioneAppello.class);
-				String pkg = getPackageName();
-				// setto i dati ricavati dal login
-				intent.putExtra(pkg + ".iscriz", pageData);
-				intent.putExtra(pkg + ".url", url);
-				startActivity(intent);
-			} else {
-				iscrizioniHandler.sendEmptyMessage(INIT);
-			}
-			progressDialog.dismiss();
+			super.onPostExecute(result);
+			onTaskCompleted(connect);
 		}
 
 		@Override
-		protected Void doInBackground(String... params) {
-			if (params != null && params.length > 0) {
-				if (connect) {
-					url = params[0];
-					pageData = cm.connection(ConnectionManager.SSOL, url, null);
-				} else {
-					retrieveData(params[0]);
-				}
+		protected Void doInBackground(Void... params) {
+			if (Utils.isNetworkAvailable(Iscrizioni.this)) {
+				if (connect && !isCancelled())
+					page_HTML = cm.connection(ConnectionManager.SSOL, page_URL, null);
+				else if (!isCancelled())
+					retrieveData();
+			} else {
+				cm.setLogged(false);
+				showErrorMessage("Connessione NON attiva!");
 			}
-			return null;
+			return (null);
+		}
+
+		private void retrieveData() {
+			try {
+				if ("OLD".equals(type)) {
+					if (page_HTML == null)
+						return;
+
+					String esame = Utils.jsoupSelect(page_HTML, "select.TopTabText[name=id_insegn]>option[selected=selected]").text();
+					groupData.add(esame.toUpperCase());
+					List<Object> children = new ArrayList<Object>();
+					childData.add(children);
+					retrieveAppelli(children);
+				} else {
+					page_HTML = cm.connection(ConnectionManager.SSOL, Utils.TARGET_ISCRIZIONI, null);
+
+					if (page_HTML == null)
+						return;
+
+					Elements trs = Utils.jsoupSelect(page_HTML, "table.Border>tbody>tr");
+
+					for (Element tr : trs) {
+						Elements tds = tr.children();
+
+						groupData.add(tds.get(1).text());
+						List<Object> children = new ArrayList<Object>();
+						childData.add(children);
+
+						Elements td = tds.get(4).children();
+						if (td.hasAttr("onclick")) {
+							String link = SsolHttpClient.AUTH_URI + td.attr("onclick").split("'")[1];
+							if (Utils.isLink(link)) {
+								page_HTML = cm.connection(ConnectionManager.SSOL, link, null);
+
+								if (page_HTML != null)
+									retrieveAppelli(children);
+							}
+						} else if (!td.isEmpty())
+							children.add(td.text());
+					}
+				}
+			} catch (Exception e) {
+				showErrorMessage("Si è verificato un errore durante il parsing.");
+				if (DEBUG)
+					Log.e(TAG, e.getMessage());
+			}
+			page_HTML = "";
+		}
+
+		private void retrieveAppelli(List<Object> children) {
+			page_HTML = Utils.removeSpecialString(page_HTML, "&nbsp;");
+
+			for (Element fs : Utils.jsoupSelect(page_HTML, "fieldset"))
+				children.add(new Appello(fs));
+
 		}
 	}
 }

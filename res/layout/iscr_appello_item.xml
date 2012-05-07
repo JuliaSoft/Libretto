@@ -6,19 +6,16 @@
     android:orientation="vertical" >
 
     <TableLayout
-        android:id="@+id/tableLayout1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
         <TableRow
-            android:id="@+id/tableRow1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:padding="2dp" >
 
             <TextView
-                android:id="@+id/id_iscr_data"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Data chiusura iscrizioni"
@@ -35,26 +32,22 @@
                 android:layout_marginLeft="5dp"
                 android:gravity="right"
                 android:paddingRight="15dp"
-                android:text="Small Text"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="#0d3d64" />
 
         </TableRow>
 
         <TableRow
-            android:id="@+id/tableRow2"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_marginTop="10dp"
             android:padding="2dp" >
 
             <LinearLayout
-                android:id="@+id/linearLayout2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" >
 
                 <TextView
-                    android:id="@+id/textView3"
                     android:layout_width="match_parent"
                     android:layout_height="42dp"
                     android:gravity="center_vertical"
@@ -67,7 +60,6 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/linearLayout2"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent" >
 
@@ -82,14 +74,12 @@
         </TableRow>
 
         <TableRow
-            android:id="@+id/tableRow4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:padding="2dp" >
 
             <TextView
-                android:id="@+id/textView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Luogo"
@@ -111,14 +101,12 @@
         </TableRow>
 
         <TableRow
-            android:id="@+id/tableRow5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:padding="2dp" >
 
             <TextView
-                android:id="@+id/textView6"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Verbalizzazione"
@@ -136,9 +124,7 @@
             android:layout_marginLeft="15dip"
             android:layout_marginRight="15dip"
             android:layout_marginTop="10dip"
-            android:inputType="textMultiLine"
             android:maxLines="2"
-            android:text="Small Text"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="#0d3d64" />
     </TableLayout>
@@ -151,7 +137,6 @@
         android:orientation="vertical" >
 
         <LinearLayout
-            android:id="@+id/linearLayout3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dip"
@@ -164,7 +149,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dip"
                 android:gravity="center"
-                android:text="Medium Text"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textColor="#000000"
                 android:textSize="14sp"
@@ -177,12 +161,10 @@
             android:layout_width="88dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dip"
-            android:text="ToggleButton"
             android:textOff="Iscriviti"
             android:textOn="Cancella" />
 
         <LinearLayout
-            android:id="@+id/ly_iscr_num"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dip"
@@ -190,7 +172,6 @@
             android:gravity="center" >
 
             <TextView
-                android:id="@+id/id_iscr_num"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Ordine iscrizione"
@@ -206,7 +187,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="15dip"
                 android:gravity="right"
-                android:text="Small Text"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="#0d3d64" />
         </LinearLayout>
@@ -219,7 +199,6 @@
         android:layout_margin="5dp"
         android:layout_marginTop="5dp"
         android:gravity="center"
-        android:text="Medium Text"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="#000000"
         android:textSize="14sp"

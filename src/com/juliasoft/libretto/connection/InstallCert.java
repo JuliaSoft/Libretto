@@ -27,7 +27,9 @@ import android.util.Log;
 
 public class InstallCert {
 
-	public static final String TAG = InstallCert.class.getName();
+	private static final boolean DEBUG = true;
+	private static final String TAG = InstallCert.class.getName();
+	
 	private String host;
 	private int port;
 	private File trust;
@@ -46,13 +48,13 @@ public class InstallCert {
 		KeyStore trustStore = loadTrustFile();
 
 		SSLContext context = SSLContext.getInstance("TLS");
-		TrustManagerFactory tmf = TrustManagerFactory
-				.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 		tmf.init(trustStore);
-		X509TrustManager defaultTrustManager = (X509TrustManager) tmf
-				.getTrustManagers()[0];
+		
+		X509TrustManager defaultTrustManager = (X509TrustManager) tmf.getTrustManagers()[0];
 		SavingTrustManager tm = new SavingTrustManager(defaultTrustManager);
 		context.init(null, new TrustManager[] { tm }, null);
+		
 		SSLSocketFactory factory = context.getSocketFactory();
 		SSLSocket socket = (SSLSocket) factory.createSocket(host, port);
 		socket.setSoTimeout(10000);
@@ -60,10 +62,12 @@ public class InstallCert {
 		try {
 			socket.startHandshake();
 			socket.close();
-			Log.i(TAG, "Certificate is already trusted");
+			if (DEBUG)
+				Log.i(TAG, "Certificate is already trusted.");
 			return trustStore;
 		} catch (SSLException e) {
-			Log.i(TAG, "Certificate is not trusted");
+			if (DEBUG)
+				Log.i(TAG, "Certificate is not trusted!");
 		}
 
 		X509Certificate[] chain = tm.chain;
@@ -71,63 +75,75 @@ public class InstallCert {
 			Log.i(TAG, "Could not obtain server certificate chain");
 			return null;
 		}
+		
+		
 
-		System.out.println();
-		System.out.println("Server sent " + chain.length + " certificate(s):");
-		System.out.println();
-		MessageDigest sha1 = MessageDigest.getInstance("SHA1");
-		MessageDigest md5 = MessageDigest.getInstance("MD5");
-		for (int i = 0; i < chain.length; i++) {
-			X509Certificate cert = chain[i];
-			System.out.println(" " + (i + 1) + " Subject "
-					+ cert.getSubjectDN());
-			System.out.println("   Issuer  " + cert.getIssuerDN());
-			sha1.update(cert.getEncoded());
-			System.out.println("   sha1    " + toHexString(sha1.digest()));
-			md5.update(cert.getEncoded());
-			System.out.println("   md5     " + toHexString(md5.digest()));
-			System.out.println();
-		}
-		int k = 0;
+		if (DEBUG) {
+			System.out.println("\nServer sent " + chain.length + " certificate(s):\n");
 
-		X509Certificate cert = chain[k];
-		String alias = host + "-" + (k + 1);
-		trustStore.setCertificateEntry(alias, cert);
-
-		OutputStream out = null;
-		try {
-			out = new BufferedOutputStream(new FileOutputStream(trust),
-					8 * 1024);
-			trustStore.store(out, "changeit".toCharArray());
-			out.close();
-		} catch (Exception e) {
-			Log.e(TAG, "Errore truststore non salvato!");
-		} finally {
-			if (out != null) {
-				out.close();
+			MessageDigest sha1 = MessageDigest.getInstance("SHA1");
+			MessageDigest md5 = MessageDigest.getInstance("MD5");
+			for (int i = 0; i < chain.length; i++) {
+				X509Certificate cert = chain[i];
+				System.out.println(" " + (i + 1) + " Subject "
+						+ cert.getSubjectDN());
+				System.out.println("   Issuer  " + cert.getIssuerDN());
+				sha1.update(cert.getEncoded());
+				System.out.println("   sha1    " + toHexString(sha1.digest()));
+				md5.update(cert.getEncoded());
+				System.out.println("   md5     " + toHexString(md5.digest()));
+				System.out.println();
 			}
 		}
+		int k = 0;
+		do {
+
+		
+			X509Certificate cert = chain[k];
+			String alias = host + "-" + (k + 1);
+			trustStore.setCertificateEntry(alias, cert);
+
+			OutputStream out = null;
+			try {
+				out = new BufferedOutputStream(new FileOutputStream(trust),
+						8 * 1024);
+				trustStore.store(out, "changeit".toCharArray());
+				out.close();
+			} catch (Exception e) {
+				if (DEBUG)
+					Log.e(TAG, "Error truststore unsaved!");
+			} finally {
+				if (out != null) {
+					out.close();
+				}
+			}
+			k++;
+		} while (k < chain.length);
 
 		return trustStore;
 	}
 
-	public static KeyStore loadTrustFile() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-		File file = new File(Environment.getExternalStorageDirectory(), "univr.esse3.cineca.it");
+	public static KeyStore loadTrustFile() throws KeyStoreException,
+			NoSuchAlgorithmException, CertificateException, IOException {
+		File file = new File(Environment.getExternalStorageDirectory(),
+				"univr.esse3.cineca.it");
 		KeyStore trustStore = KeyStore.getInstance("BKS");
-		
+
 		FileInputStream instream = null;
 		try {
 			instream = new FileInputStream(file);
 			trustStore.load(instream, "changeit".toCharArray());
 		} catch (Exception e) {
-			Log.i(TAG, "Trustore inesistente.");
+			if (DEBUG)
+				Log.i(TAG, "Trustore nonexistent.");
 			trustStore.load(null);
 		} finally {
 			if (instream != null) {
 				try {
 					instream.close();
 				} catch (IOException e) {
-					Log.e(TAG, "Error loadTrustFile(): Chiusura file non riuscita!");
+					if (DEBUG)
+						Log.e(TAG, "Error loadTrustFile(): File close failed!");
 				}
 			}
 		}
