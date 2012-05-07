@@ -2,9 +2,6 @@ package com.juliasoft.libretto.activity;
 
 import org.jsoup.select.Elements;
 
-import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.utils.Utils;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.TabActivity;
@@ -21,6 +18,9 @@ import android.widget.Button;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
+
+import com.juliasoft.libretto.connection.ConnectionManager;
+import com.juliasoft.libretto.utils.Utils;
 
 public class TabBar extends TabActivity {
 
@@ -75,15 +75,16 @@ public class TabBar extends TabActivity {
 
 	private void initInfoButton() {
 		String message = 
+				
 				"Quest'applicazione accede ai server dell'Università di Verona "
 				+ "utilizzando HTML e, per sicurezza, dei socket SSL.\n"
 				+ "Non essendo note delle API per il sistema ESSE3, il recupero delle informazioni dalla "
-				+ "pagina HTML avviene tramite un parser basato sulla libreria Jsoup (http://jsoup.org), "
+				+ "pagina HTML avviene tramite un parser basato sulla libreria Jsoup (jsoup.org), "
 				+ "il che potrà comprometterne in futuro il funzionamento. "
-				+ "Il logo dell'applicazione è stato gentilmente fornito da Logogratis (http://www.logogratis.net). "
-				+ "Questo software è stato sviluppato da Davide Vallicella per Julia Srl (http://www.juliasoft.com).";
+				+ "Il logo dell'applicazione è stato gentilmente fornito da Logogratis (www.logogratis.net). "
+				+ "Questo software è stato sviluppato da Davide Vallicella per Julia Srl (www.juliasoft.com).";
 
-		TextView text = new TextView(TabBar.this);
+		TextView text = new TextView(TabBar.this);		
 		SpannableString s = new SpannableString(message);
 		Linkify.addLinks(s, Linkify.WEB_URLS);
 		text.setText(s);

@@ -25,11 +25,13 @@ import android.text.util.Linkify;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
@@ -64,12 +66,14 @@ public class Login extends Activity {
 	private EditText passwordEdit;
 	private CheckBox rememberCheck;
 	private Button signinButton;
-	private IDContextMenu idMenuDialog;
+	private Dialog idMenuDialog;
 	private AlertDialog allertDialog;
 	private ProgressDialog progressDialog;
 	private String username;
 	private String password;
 	private String url = Utils.TARGET_HOME;
+	private boolean isMultiID = false;
+	private String page_HTML;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +100,7 @@ public class Login extends Activity {
 	protected Dialog onCreateDialog(int id) {
 		switch (id) {
 		case MENU_DIALOG_ID:
-			return idMenuDialog.createMenu("Scegli matricola");
+			return idMenuDialog;
 		case ERROR_DIALOG_ID:
 			return allertDialog;
 		case PROGRESS_DIALOG_ID:
@@ -114,7 +118,8 @@ public class Login extends Activity {
 			switch (msg.what) {
 			case SUCCESS:
 				onLoginSuccess();
-				Intent tabActivitiy = new Intent(getApplicationContext(), TabBar.class);
+				Intent tabActivitiy = new Intent(getApplicationContext(),
+						TabBar.class);
 				startActivityForResult(tabActivitiy, 1);
 				break;
 			case ERROR_MESSAGE:
@@ -148,19 +153,17 @@ public class Login extends Activity {
 		progressDialog = new ProgressDialog(Login.this);
 		progressDialog.setTitle("Please wait...");
 		progressDialog.setMessage("Loading data ...");
-		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-					
-			@Override
-			public void onCancel(DialogInterface dialog) {
-				loginTask.cancel(true);
-			}
-		});
+		progressDialog
+				.setOnCancelListener(new DialogInterface.OnCancelListener() {
 
-		allertDialog = new AlertDialog
-				.Builder(Login.this)
-				.setTitle("Login")
-				.setIcon(android.R.drawable.ic_dialog_alert)
-				.create();
+					@Override
+					public void onCancel(DialogInterface dialog) {
+						loginTask.cancel(true);
+					}
+				});
+
+		allertDialog = new AlertDialog.Builder(Login.this).setTitle("Login")
+				.setIcon(android.R.drawable.ic_dialog_alert).create();
 		allertDialog.setButton("OK", new DialogInterface.OnClickListener() {
 
 			@Override
@@ -169,11 +172,13 @@ public class Login extends Activity {
 			}
 		});
 
-		WindowManager.LayoutParams lp = allertDialog.getWindow().getAttributes();
+		WindowManager.LayoutParams lp = allertDialog.getWindow()
+				.getAttributes();
 		lp.dimAmount = 0.5f;
 
 		allertDialog.getWindow().setAttributes(lp);
-		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		allertDialog.getWindow().addFlags(
+				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 	}
 
 	private void initRememberPassword(boolean saveLogin) {
@@ -183,34 +188,98 @@ public class Login extends Activity {
 
 	private void initPasswordEditText(boolean saveUser) {
 		passwordEdit = (EditText) findViewById(R.id.password);
+		final ImageView clearButtonImage = (ImageView) findViewById(R.id.login_clear_password);
+
+		clearButtonImage.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				passwordEdit.setText("");
+				clearButtonImage.setVisibility(View.GONE);
+			}
+		});
+		
+		passwordEdit.setOnFocusChangeListener(new OnFocusChangeListener() {
+			
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				if(!hasFocus)
+					clearButtonImage.setVisibility(View.GONE);
+				
+			}
+		});
+		passwordEdit.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				if (s.length() > 0)
+					clearButtonImage.setVisibility(View.VISIBLE);
+				else
+					clearButtonImage.setVisibility(View.GONE);
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				
+			}
+		});
 		if (saveUser)
 			passwordEdit.setText(loginPreferences.getString(PREF_PASSWORD, ""));
 	}
 
 	private void initUserNameEditTextWithConstraints(boolean savePass) {
 		usernameEdit = (EditText) findViewById(R.id.username);
-		usernameEdit.addTextChangedListener(new TextWatcher() {
+		final ImageView clearButtonImage = (ImageView) findViewById(R.id.login_clear_username);
+
+		clearButtonImage.setOnClickListener(new OnClickListener() {
 
 			@Override
-			public void afterTextChanged(Editable s) {}
-
-			@Override
-			public void beforeTextChanged(CharSequence s,
-										  int start,
-										  int count,
-										  int after) {}
-
-			@Override
-			public void onTextChanged(CharSequence s,
-									  int start, 
-									  int before,
-									  int count) {
-				
-				if (s.length() != 0 && !Pattern.matches("^[a-z0-9]+$", s))
-					usernameEdit.setError("Oops! Prefisso 'id', caratteri accettati a-z e 0-9");
+			public void onClick(View v) {
+				usernameEdit.setText("");
+				clearButtonImage.setVisibility(View.GONE);
 			}
 		});
 		
+		usernameEdit.setOnFocusChangeListener(new OnFocusChangeListener() {
+			
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				if(!hasFocus)
+					clearButtonImage.setVisibility(View.GONE);
+				
+			}
+		});
+		
+		usernameEdit.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void afterTextChanged(Editable s) {
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				if (s.length() > 0) {
+					clearButtonImage.setVisibility(View.VISIBLE);
+
+					if (!Pattern.matches("^[a-z0-9]+$", s))
+						usernameEdit
+								.setError("Oops! Prefisso 'id', caratteri accettati a-z e 0-9");
+				} else
+					clearButtonImage.setVisibility(View.GONE);
+			}
+		});
+
 		if (savePass)
 			usernameEdit.setText(loginPreferences.getString(PREF_USERNAME, ""));
 
@@ -240,7 +309,7 @@ public class Login extends Activity {
 
 	private void setLinkToJuliaSrl() {
 		TextView disclaimer = (TextView) findViewById(R.id.footer_message);
-		Linkify.addLinks(disclaimer, Linkify.ALL);
+		Linkify.addLinks(disclaimer, Linkify.WEB_URLS);
 	}
 
 	private void enableLogin() {
@@ -267,17 +336,18 @@ public class Login extends Activity {
 		cm.reset();
 		html_pages.clear();
 		url = Utils.TARGET_HOME;
+		idMenuDialog = null;
+		System.gc();
 	}
 
 	private void onTaskCompleted(boolean success) {
+		if (isMultiID)
+			selectID();
 		if (success)
 			loginHandler.sendEmptyMessage(SUCCESS);
-		else
-			doReset();
 
 		removeDialog(PROGRESS_DIALOG_ID);
 		enableLogin();
-		loginTask = null;
 		if (DEBUG)
 			Log.i(TAG, "Task complete.");
 	}
@@ -299,30 +369,34 @@ public class Login extends Activity {
 		loginHandler.sendEmptyMessage(ERROR_MESSAGE);
 	}
 
-	private void selectID(String page_HTML) {
-		idMenuDialog = new IDContextMenu(this, MENU_DIALOG_ID, 
+	private void selectID() {
+		IDContextMenu menu = new IDContextMenu(this, MENU_DIALOG_ID,
 				new IDContextMenu.IconContextMenuOnClickListener() {
 
 					@Override
-					public void onClick(final String url) {
+					public void onClick(String url) {
 						Login.this.url = url;
+						isMultiID = false;
+						idMenuDialog.dismiss();
 						doLogin();
-
 					}
 				});
 
 		Resources res = getResources();
 
-		for (Element tr : Utils.jsoupSelect(page_HTML, "table.detail_table").select("tr")) {
+		for (Element tr : Utils.jsoupSelect(page_HTML, "table.detail_table")
+				.select("tr")) {
 			Element a = tr.select("td.detail_table>a.detail_table").first();
 			if (a != null) {
 				String id = a.text();
 				String url = Esse3HttpClient.AUTH_URI + a.attr("href");
-				idMenuDialog.addItem(res, id, R.drawable.forward_arrow, url);
+				menu.addItem(res, id, R.drawable.forward_arrow, url);
 			}
 		}
 
-		loginHandler.sendEmptyMessage(USER_ID_MENU);
+		idMenuDialog = menu.createMenu("Scegli cariera");
+		idMenuDialog.show();
+		// loginHandler.sendEmptyMessage(USER_ID_MENU);
 	}
 
 	private class LoginTask extends AsyncTask<Void, Void, Boolean> {
@@ -349,10 +423,12 @@ public class Login extends Activity {
 					}
 				}
 				if (cm.isLogged() && !isCancelled()) {
-					String page_HTML = cm.connection(ConnectionManager.ESSE3, url, null);
-					if (isMultiID(page_HTML))
-						selectID(page_HTML);
-					else
+					page_HTML = cm.connection(ConnectionManager.ESSE3, url,
+							null);
+					if (isMultiID(page_HTML)) {
+						// selectID(page_HTML);
+						isMultiID = true;
+					} else
 						return true;
 				}
 			} else {
@@ -364,7 +440,8 @@ public class Login extends Activity {
 		}
 
 		private boolean isMultiID(String page_HTML) {
-			return page_HTML == null ? false : page_HTML.contains("Scegli carriera");
+			return page_HTML == null ? false : page_HTML
+					.contains("Scegli carriera");
 		}
 	}
 }

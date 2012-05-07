@@ -171,7 +171,9 @@ public class IDContextMenu implements DialogInterface.OnCancelListener, DialogIn
 			public void onClick(DialogInterface dialoginterface, int i) {
 				if (clickHandler != null)
 					clickHandler.onClick(((IconContextMenuItem) menuAdapter.getItem(i)).actionTag);
+				onDismiss(dialoginterface);
 				isShowing = false;
+				
 			}
 		});
 
@@ -194,5 +196,7 @@ public class IDContextMenu implements DialogInterface.OnCancelListener, DialogIn
 	}
 
 	@Override
-	public void onDismiss(DialogInterface dialog) {}
+	public void onDismiss(DialogInterface dialog) {
+		dialog.dismiss();
+	}
 }
