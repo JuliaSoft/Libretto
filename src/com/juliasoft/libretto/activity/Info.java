@@ -10,7 +10,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -113,9 +112,6 @@ public class Info extends Activity {
 		listDetails = new ArrayList<String>();
 		listView = new ArrayList<TextView>();
 
-		Intent intent = getIntent();
-		String page_HTML = intent.getStringExtra(getPackageName() + ".info");
-		retrieveData(page_HTML);
 		listView.add((TextView) findViewById(R.id.info_user));
 		listView.add((TextView) findViewById(R.id.info_matricola));
 		listView.add((TextView) findViewById(R.id.info_annoAccademico));
