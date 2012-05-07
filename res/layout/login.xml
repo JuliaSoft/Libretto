@@ -81,27 +81,59 @@
             android:padding="10dip"
             android:paddingLeft="3dp" >
 
-            <EditText
-                android:id="@+id/username"
+            <RelativeLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dip"
-                android:layout_marginTop="5dip"
-                android:hint="@string/user_id"
-                android:imeActionLabel="Next"
-                android:imeOptions="actionNext"
-                android:singleLine="true" />
+                android:orientation="horizontal" >
 
-            <EditText
-                android:id="@+id/password"
+                <EditText
+                    android:id="@+id/username"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dip"
+                    android:layout_marginTop="5dip"
+                    android:hint="@string/user_id"
+                    android:imeActionLabel="Next"
+                    android:imeOptions="actionNext"
+                    android:singleLine="true" />
+
+                <ImageView
+                    android:id="@+id/login_clear_username"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:src="@drawable/ico_cross"
+                    android:visibility="invisible" />
+            </RelativeLayout>
+
+            <RelativeLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dip"
-                android:hint="@string/password"
-                android:imeActionLabel="Next"
-                android:imeOptions="actionDone"
-                android:inputType="textPassword"
-                android:singleLine="true" />
+                android:orientation="horizontal" >
+
+                <EditText
+                    android:id="@+id/password"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dip"
+                    android:hint="@string/password"
+                    android:imeActionLabel="Next"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPassword"
+                    android:singleLine="true" />
+
+                <ImageView
+                    android:id="@+id/login_clear_password"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:src="@drawable/ico_cross"
+                    android:visibility="invisible" />
+            </RelativeLayout>
 
             <CheckBox
                 android:id="@+id/id_remember_up"
