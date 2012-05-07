@@ -1,5 +1,7 @@
 package com.juliasoft.libretto.activity;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import org.jsoup.nodes.Element;
@@ -10,6 +12,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,9 +22,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.juliasoft.libretto.connection.ConnectionManager;
+import com.juliasoft.libretto.connection.Esse3HttpClient;
 import com.juliasoft.libretto.utils.Utils;
 
 /**
@@ -41,6 +47,8 @@ public class Info extends Activity {
 
 	private InformationTask infoTask;
 	private ArrayList<TextView> listView;
+	private ImageView statoImg;
+	private ImageView fotoImg;
 	private ArrayList<String> listDetails;
 
 	private AlertDialog allertDialog;
@@ -119,7 +127,8 @@ public class Info extends Activity {
 		listView.add((TextView) findViewById(R.id.info_ordinamento));
 		listView.add((TextView) findViewById(R.id.info_normativa));
 		listView.add((TextView) findViewById(R.id.info_dataImmatricolazione));
-
+		statoImg = (ImageView) findViewById(R.id.info_imageStato);
+		fotoImg = (ImageView) findViewById(R.id.info_foto);
 		initDialog();
 		doUpdate();
 	}
@@ -159,7 +168,7 @@ public class Info extends Activity {
 		infoTask = (InformationTask) new InformationTask().execute();
 	}
 
-	private Boolean retrieveData(String page_HTML) {
+	private Boolean retrieveData(final String page_HTML) {
 		if (page_HTML != null) {
 			try {
 				// Recupero la matricola e il nome utente
@@ -174,7 +183,7 @@ public class Info extends Activity {
 				}
 
 				// Recupero tutte le informazioni utili dell'utente
-				Elements statoStudente = Utils.jsoupSelect(page_HTML,
+				final Elements statoStudente = Utils.jsoupSelect(page_HTML,
 						"div#gu-homepagestudente-cp2Child");
 
 				if (!statoStudente.isEmpty()) {
@@ -184,7 +193,20 @@ public class Info extends Activity {
 							.select("p#textStatusStudente>b");
 					for (Element e : aa_sc)
 						listDetails.add(e.text());
-
+					
+					// Stato immagine bandierina e foto profilo
+					
+					runOnUiThread(new Runnable() {
+						
+						@Override
+						public void run() {
+							Element stato_img = statoStudente.select("p#textStatusStudente>img").first();
+							statoImg.setImageBitmap(Utils.downloadBitmap(Info.this, Esse3HttpClient.AUTH_URI + stato_img.attr("src")));
+							Element foto_img = Utils.jsoupSelect(page_HTML, "div#gu-hpstu-boxDatiPersonali").first().siblingElements().select("img").first();
+							fotoImg.setImageBitmap(Utils.downloadBitmap(Info.this, Esse3HttpClient.AUTH_URI + foto_img.attr("src")));
+						}
+					});
+					
 					// Corso, facoltà e percorso
 
 					Elements cor_fac_per = statoStudente
@@ -226,6 +248,7 @@ public class Info extends Activity {
 		if (success)
 			infoHandler.sendEmptyMessage(INIT);
 		removeDialog(PROGRESS_DIALOG_ID);
+		infoTask.cancel(true);
 		infoTask = null;
 		if (DEBUG)
 			Log.i(TAG, "Task complete.");

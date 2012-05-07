@@ -9,6 +9,8 @@ import java.net.URLConnection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.juliasoft.libretto.activity.DettagliEsame;
+import com.juliasoft.libretto.connection.ConnectionManager;
 import com.juliasoft.libretto.connection.Esse3HttpClient;
 import com.juliasoft.libretto.connection.SsolHttpClient;
 
@@ -16,6 +18,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.util.Log;
 
@@ -34,6 +38,7 @@ public class Utils {
 			+ "main?ent=libretto";
 	public static final String TARGET_ISCRIZIONI_OLD = SsolHttpClient.AUTH_URI
 			+ "main?ent=ieappellics";
+
 	/*
 	 * @return boolean return true if the application can access the internet
 	 */
@@ -63,6 +68,37 @@ public class Utils {
 				Log.d(TAG, "OFFLINE!");
 			return false;
 		}
+	}
+
+	public static Bitmap downloadBitmap(Context context, String fileUrl) {
+		ConnectionManager cm = ConnectionManager.getInstance();
+
+		if (isNetworkAvailable(context)) {
+			InputStream is = null;
+
+			if (Utils.isLink(fileUrl)) {
+				try {
+					cm.getEsse3Connection().get(fileUrl);
+					is = cm.getEsse3Connection().getEntity().getContent();
+					return BitmapFactory.decodeStream(is);
+				} catch (Exception e) {
+					if (DEBUG)
+						Log.e(TAG, "Error downloadBitmap(): " + e.getMessage());
+				} finally {
+					if (is != null) {
+						try {
+							is.close();
+						} catch (IOException e) {
+							if (DEBUG)
+								Log.e(TAG,
+										"Error downloadBitmap(): Chiusura file non riuscita!");
+						}
+					}
+				}
+			}
+		} else if (DEBUG)
+			Log.e(TAG, "La connessione NON è attiva!");
+		return null;
 	}
 
 	public static Elements jsoupSelect(String page_HTML, String query) {

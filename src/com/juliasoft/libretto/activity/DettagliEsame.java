@@ -1,19 +1,10 @@
 package com.juliasoft.libretto.activity;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.WindowManager;
@@ -21,16 +12,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.juliasoft.libretto.connection.ConnectionManager;
 import com.juliasoft.libretto.utils.Utils;
 
 public class DettagliEsame extends Activity {
 
 	private static final boolean DEBUG = true;
 	private static final String TAG = DettagliEsame.class.getName();
-
-	private static final int ERROR_MESSAGE = 0;
-	private static final int ERROR_DIALOG_ID = 1;
 	
 	private AlertDialog allertDialog;
 
@@ -40,27 +27,6 @@ public class DettagliEsame extends Activity {
 		setContentView(R.layout.dettagli_esame);
 		init();
 	}
-
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		switch (id) {
-		case ERROR_DIALOG_ID:
-			return allertDialog;
-		default:
-			return super.onCreateDialog(id);
-		}
-	}
-
-	private Handler dettagliHandler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			switch (msg.what) {
-			case ERROR_MESSAGE:
-				showDialog(ERROR_DIALOG_ID);
-				break;
-			}
-		}
-	};
 
 	private void init() {
 		Intent intent = getIntent();
@@ -91,8 +57,7 @@ public class DettagliEsame extends Activity {
 		voto.setText(intent.getStringExtra(pkg + ".voto"));
 		ric.setText(intent.getStringExtra(pkg + ".ric"));
 		q_val.setText(intent.getStringExtra(pkg + ".q_val"));
-		img.setImageBitmap(downloadBitmap(intent.getStringExtra(pkg + ".img")));
-
+		img.setImageBitmap(Utils.downloadBitmap(DettagliEsame.this, intent.getStringExtra(pkg + ".img")));
 		initDialog();
 	}
 
@@ -115,41 +80,5 @@ public class DettagliEsame extends Activity {
 
 		allertDialog.getWindow().setAttributes(lp);
 		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
-	}
-
-	private Bitmap downloadBitmap(String fileUrl) {
-		ConnectionManager cm = ConnectionManager.getInstance();
-		
-		if (Utils.isNetworkAvailable(DettagliEsame.this)) {
-			InputStream is = null;
-
-			if (Utils.isLink(fileUrl)) {
-				try {
-					cm.getEsse3Connection().get(fileUrl);
-					is = cm.getEsse3Connection().getEntity().getContent();
-					return BitmapFactory.decodeStream(is);
-				} catch (Exception e) {
-					showErrorMessage(e.getMessage());
-					if (DEBUG)
-						Log.e(TAG, "Error downloadBitmap(): " + e.getMessage());
-				} finally {
-					if (is != null) {
-						try {
-							is.close();
-						} catch (IOException e) {
-							if (DEBUG)
-								Log.e(TAG, "Error downloadBitmap(): Chiusura file non riuscita!");
-						}
-					}
-				}
-			}
-		} else
-			showErrorMessage("La connessione NON è attiva!");
-		return null;
-	}
-
-	private void showErrorMessage(String msg) {
-		allertDialog.setMessage(msg);
-		dettagliHandler.sendEmptyMessage(ERROR_MESSAGE);
 	}
 }
