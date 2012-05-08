@@ -23,68 +23,72 @@ public class Iscrizione {
 	private boolean isRegister;
 
 	public Iscrizione(Element form) {
-		params = new HashMap<String, String>();
-		types = new ArrayList<String>();
-		isEnable = true;
-		url = SsolHttpClient.AUTH_URI + form.attr("action");
-		
-		Elements inputs = form.select("input");
+		try {
+			params = new HashMap<String, String>();
+			types = new ArrayList<String>();
+			isEnable = true;
+			url = SsolHttpClient.AUTH_URI + form.attr("action");
 
-		for (Element input : inputs)
-			params.put(input.attr("name"), input.attr("value"));
+			Elements inputs = form.select("input");
 
-		Elements trs = form.select("table").select("tr");
-		String action = params.get("azione");
+			for (Element input : inputs)
+				params.put(input.attr("name"), input.attr("value"));
 
-		if (action.equals("INSERT")) {
-			isRegister = false;
-			//types.clear();
-			Elements options = form.select("select>option");
-			for (Element option : options)
-				types.add(option.text());
+			Elements trs = form.select("table").select("tr");
+			String action = params.get("azione");
 
-			Elements tds = trs.get(0).select("td.Content_Chiaro");
-			data = tds.get(0).text();
-			
-			iscritti = tds.get(1).text();
-			if (tds.get(1).select("input[type=submit]").isEmpty()) {
-				isEnable = false;
-				iscritti = iscritti.replace("Iscrizioni chiuse", "");
+			if (action.equals("INSERT")) {
+				isRegister = false;
+				// types.clear();
+				Elements options = form.select("select>option");
+				for (Element option : options)
+					types.add(option.text());
+
+				Elements tds = trs.get(0).select("td.Content_Chiaro");
+				data = tds.get(0).text();
+
+				iscritti = tds.get(1).text();
+				if (tds.get(1).select("input[type=submit]").isEmpty()) {
+					isEnable = false;
+					iscritti = iscritti.replace("Iscrizioni chiuse", "");
+				}
+
+				tds = trs.get(2).select("td.Content_Chiaro");
+				luogo = tds.text();
+
+				tds = trs.get(3).select("td.Content_Chiaro");
+				verbalizzazione = tds.text();
 			}
 
-			tds = trs.get(2).select("td.Content_Chiaro");
-			luogo = tds.text();
+			// Se sono gi� iscritto all'esame
+			if (action.equals("DELETE")) {
+				isRegister = true;
+				Elements tds = trs.get(0).select("td.Content_Chiaro");
+				numero = tds.get(0).text();
 
-			tds = trs.get(3).select("td.Content_Chiaro");
-			verbalizzazione = tds.text();
+				iscritti = tds.get(1).text();
+				if (tds.get(1).select("input[type=submit]").isEmpty()) {
+					isEnable = false;
+					iscritti = iscritti.replace("Iscrizioni chiuse", "");
+				}
+
+				tds = trs.get(1).select("td.Content_Chiaro");
+				data = tds.text();
+
+				tds = trs.get(2).select("td.Content_Chiaro");
+				types.add(tds.text());
+
+				tds = trs.get(3).select("td.Content_Chiaro");
+				luogo = tds.text();
+
+				tds = trs.get(4).select("td.Content_Chiaro");
+				verbalizzazione = tds.text();
+			}
+		} catch (Exception e) {
+			Utils.appendToLogFile("Iscrizione Iscrizione()", e.getMessage());
 		}
-
-		// Se sono gi� iscritto all'esame
-		if (action.equals("DELETE")) {
-			isRegister = true;
-			Elements tds = trs.get(0).select("td.Content_Chiaro");
-			numero = tds.get(0).text();
-			
-			iscritti = tds.get(1).text();
-			if (tds.get(1).select("input[type=submit]").isEmpty()) {
-				isEnable = false;
-				iscritti = iscritti.replace("Iscrizioni chiuse", "");
-			}
-		
-			tds = trs.get(1).select("td.Content_Chiaro");
-			data = tds.text();
-
-			tds = trs.get(2).select("td.Content_Chiaro");
-			types.add(tds.text());
-
-			tds = trs.get(3).select("td.Content_Chiaro");
-			luogo = tds.text();
-
-			tds = trs.get(4).select("td.Content_Chiaro");
-			verbalizzazione = tds.text();
-		}		
 	}
-	
+
 	public String getData() {
 		return data;
 	}
@@ -96,7 +100,7 @@ public class Iscrizione {
 	public String getNumero() {
 		return numero;
 	}
-	
+
 	public String getUrl() {
 		return url;
 	}
@@ -108,8 +112,8 @@ public class Iscrizione {
 	public HashMap<String, String> getParams() {
 		return params;
 	}
-	
-	public void addParams(String key, String value){
+
+	public void addParams(String key, String value) {
 		params.put(key, value);
 	}
 

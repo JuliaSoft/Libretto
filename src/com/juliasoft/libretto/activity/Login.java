@@ -419,6 +419,7 @@ public class Login extends Activity {
 					try {
 						cm.authenticate();
 					} catch (Exception e) {
+						Utils.appendToLogFile("Login authenticate()", e.getMessage());
 						showErrorMessage(e.getMessage());
 					}
 				}

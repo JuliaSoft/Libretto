@@ -374,6 +374,7 @@ public class Iscrizioni extends ExpandableListActivity {
 					}
 				}
 			} catch (Exception e) {
+				Utils.appendToLogFile("Iscrizioni retrieveData()", e.getMessage());
 				showErrorMessage("Si è verificato un errore durante il parsing.");
 				if (DEBUG)
 					Log.e(TAG, e.getMessage());

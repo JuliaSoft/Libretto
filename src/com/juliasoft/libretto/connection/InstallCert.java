@@ -22,6 +22,8 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import com.juliasoft.libretto.utils.Utils;
+
 import android.os.Environment;
 import android.util.Log;
 
@@ -142,6 +144,7 @@ public class InstallCert {
 				try {
 					instream.close();
 				} catch (IOException e) {
+					Utils.appendToLogFile("InstallCert loadTrustFile()", e.getMessage());
 					if (DEBUG)
 						Log.e(TAG, "Error loadTrustFile(): File close failed!");
 				}

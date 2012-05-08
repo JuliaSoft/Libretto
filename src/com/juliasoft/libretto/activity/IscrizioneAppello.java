@@ -86,7 +86,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 		String pkg = getPackageName();
 		page_HTML = intent.getStringExtra(pkg + ".page_HTML");
 		page_URL = intent.getStringExtra(pkg + ".page_URL");
-		
+
 		groupData = new ArrayList<String>();
 		childData = new ArrayList<List<Object>>();
 
@@ -101,7 +101,8 @@ public class IscrizioneAppello extends ExpandableListActivity {
 		progressDialog = new ProgressDialog(IscrizioneAppello.this);
 		progressDialog.setTitle("Please wait...");
 		progressDialog.setMessage("Loading data ...");
-		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+		progressDialog
+				.setOnCancelListener(new DialogInterface.OnCancelListener() {
 
 					@Override
 					public void onCancel(DialogInterface dialog) {
@@ -109,11 +110,9 @@ public class IscrizioneAppello extends ExpandableListActivity {
 					}
 				});
 
-		allertDialog = new AlertDialog
-				.Builder(IscrizioneAppello.this)
+		allertDialog = new AlertDialog.Builder(IscrizioneAppello.this)
 				.setTitle("Libretto")
-				.setIcon(android.R.drawable.ic_dialog_alert)
-				.create();
+				.setIcon(android.R.drawable.ic_dialog_alert).create();
 		allertDialog.setButton("OK", new DialogInterface.OnClickListener() {
 
 			@Override
@@ -123,11 +122,13 @@ public class IscrizioneAppello extends ExpandableListActivity {
 
 		});
 
-		WindowManager.LayoutParams lp = allertDialog.getWindow().getAttributes();
+		WindowManager.LayoutParams lp = allertDialog.getWindow()
+				.getAttributes();
 		lp.dimAmount = 0.5f;
 
 		allertDialog.getWindow().setAttributes(lp);
-		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		allertDialog.getWindow().addFlags(
+				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 	}
 
 	private void retrieveData() {
@@ -145,6 +146,9 @@ public class IscrizioneAppello extends ExpandableListActivity {
 						corso.setText(s[0]);
 						esame.setText(s[1]);
 					} catch (Exception e) {
+						Utils.appendToLogFile(
+								"IscrizioneAppello retrieveData()",
+								e.getMessage());
 						if (DEBUG)
 							Log.e(TAG, "Error retriveData(): " + e.getMessage());
 					}
@@ -173,6 +177,8 @@ public class IscrizioneAppello extends ExpandableListActivity {
 				}
 			}
 		} catch (Exception e) {
+			Utils.appendToLogFile("IscrizioneAppello retrieveData()",
+					e.getMessage());
 			if (DEBUG)
 				Log.e(TAG, "Retrive data: " + e.getMessage());
 		}
@@ -190,7 +196,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 	}
 
 	private void onTaskCompleted() {
-		if(loadQuestionario)
+		if (loadQuestionario)
 			appelloHandler.sendEmptyMessage(QUEST);
 		else
 			refresh();
@@ -371,27 +377,34 @@ public class IscrizioneAppello extends ExpandableListActivity {
 						null);
 			}
 
-			String s[] = group.split("-");
-			if (s.length > 0) {
-				TextView tv = (TextView) convertView
-						.findViewById(R.id.tv_app_typ);
-				tv.setText(s[0]);
-				if (s.length > 1) {
-					tv = (TextView) convertView.findViewById(R.id.tv_app_data);
-					tv.setText(s[1]);
+			try {
 
-					if (s.length > 2) {
+				String s[] = group.split("-");
+				if (s.length > 0) {
+					TextView tv = (TextView) convertView
+							.findViewById(R.id.tv_app_typ);
+					tv.setText(s[0]);
+					if (s.length > 1) {
 						tv = (TextView) convertView
-								.findViewById(R.id.tv_app_ora);
-						tv.setText(s[2]);
+								.findViewById(R.id.tv_app_data);
+						tv.setText(s[1]);
 
-						if (s.length > 3) {
+						if (s.length > 2) {
 							tv = (TextView) convertView
-									.findViewById(R.id.tv_app_note);
-							tv.setText(s[3]);
+									.findViewById(R.id.tv_app_ora);
+							tv.setText(s[2]);
+
+							if (s.length > 3) {
+								tv = (TextView) convertView
+										.findViewById(R.id.tv_app_note);
+								tv.setText(s[3]);
+							}
 						}
 					}
 				}
+			} catch (Exception e) {
+				Utils.appendToLogFile("IscrizioneAppello getGroupView()",
+						e.getMessage());
 			}
 			return convertView;
 		}
@@ -408,11 +421,12 @@ public class IscrizioneAppello extends ExpandableListActivity {
 
 	}
 
-	private void refresh(){
+	private void refresh() {
 		groupData.clear();
 		childData.clear();
 		loadQuestionario = false;
-		page_HTML = ConnectionManager.getInstance().connection(ConnectionManager.SSOL, page_URL, null);
+		page_HTML = ConnectionManager.getInstance().connection(
+				ConnectionManager.SSOL, page_URL, null);
 		runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -420,7 +434,7 @@ public class IscrizioneAppello extends ExpandableListActivity {
 			}
 		});
 	}
-	
+
 	private class AppelloTask extends
 			AsyncTask<HashMap<String, String>, Void, Void> {
 
@@ -451,8 +465,9 @@ public class IscrizioneAppello extends ExpandableListActivity {
 		private void iscrizione(HashMap<String, String> params) {
 			if (Utils.isLink(iscrizione_URL) && !isCancelled()) {
 				loadQuestionario = false;
-				page_HTML = cm.connection(ConnectionManager.SSOL, iscrizione_URL, params);
-				if (page_HTML != null && page_HTML.contains("Questionario")) 
+				page_HTML = cm.connection(ConnectionManager.SSOL,
+						iscrizione_URL, params);
+				if (page_HTML != null && page_HTML.contains("Questionario"))
 					loadQuestionario = true;
 			}
 		}

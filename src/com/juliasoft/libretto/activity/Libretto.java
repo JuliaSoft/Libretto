@@ -129,13 +129,18 @@ public class Libretto extends ListActivity {
 
 			switch (msg.what) {
 			case SHOW_ACTIVITY:
-				Intent statisticsIntent = new Intent(getApplicationContext(), Medie.class);
+				Intent statisticsIntent = new Intent(getApplicationContext(),
+						Medie.class);
 				String pkg = getPackageName();
 
-				statisticsIntent.putExtra(pkg + ".aritm", String.valueOf(mediaAritmetica()));
-				statisticsIntent.putExtra(pkg + ".pond", String.valueOf(mediaPonderata()));
-				statisticsIntent.putExtra(pkg + ".num", String.valueOf(numeroEsami()));
-				statisticsIntent.putExtra(pkg + ".crediti", String.valueOf(creditiSostenuti()));
+				statisticsIntent.putExtra(pkg + ".aritm",
+						String.valueOf(mediaAritmetica()));
+				statisticsIntent.putExtra(pkg + ".pond",
+						String.valueOf(mediaPonderata()));
+				statisticsIntent.putExtra(pkg + ".num",
+						String.valueOf(numeroEsami()));
+				statisticsIntent.putExtra(pkg + ".crediti",
+						String.valueOf(creditiSostenuti()));
 
 				startActivity(statisticsIntent);
 				break;
@@ -147,7 +152,8 @@ public class Libretto extends ListActivity {
 	};
 
 	private void init() {
-		adapter = new SeparatedListAdapter(Libretto.this, R.layout.libretto_item);
+		adapter = new SeparatedListAdapter(Libretto.this,
+				R.layout.libretto_item);
 		esami = new HashSet<Esame>();
 		pianoStudio = new ArrayList<String>();
 
@@ -164,19 +170,18 @@ public class Libretto extends ListActivity {
 		progressDialog = new ProgressDialog(Libretto.this);
 		progressDialog.setTitle("Please wait...");
 		progressDialog.setMessage("Loading data ...");
-		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-					
-			@Override
-			public void onCancel(DialogInterface dialog) {
-				librettoTask.cancel(true);
-			}
-		});
+		progressDialog
+				.setOnCancelListener(new DialogInterface.OnCancelListener() {
 
-		allertDialog = new AlertDialog
-				.Builder(Libretto.this)
+					@Override
+					public void onCancel(DialogInterface dialog) {
+						librettoTask.cancel(true);
+					}
+				});
+
+		allertDialog = new AlertDialog.Builder(Libretto.this)
 				.setTitle("Libretto")
-				.setIcon(android.R.drawable.ic_dialog_alert)
-				.create();
+				.setIcon(android.R.drawable.ic_dialog_alert).create();
 		allertDialog.setButton("OK", new DialogInterface.OnClickListener() {
 
 			@Override
@@ -185,11 +190,13 @@ public class Libretto extends ListActivity {
 			}
 		});
 
-		WindowManager.LayoutParams lp = allertDialog.getWindow().getAttributes();
+		WindowManager.LayoutParams lp = allertDialog.getWindow()
+				.getAttributes();
 		lp.dimAmount = 0.5f;
 
 		allertDialog.getWindow().setAttributes(lp);
-		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		allertDialog.getWindow().addFlags(
+				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 	}
 
 	private void doUpdate() {
@@ -198,34 +205,40 @@ public class Libretto extends ListActivity {
 	}
 
 	private void retrieveData(String page_HTML) {
-		if (page_HTML != null) {
+		try {
+			if (page_HTML != null) {
 
-			Elements trs = Utils.jsoupSelect(page_HTML, "table.detail_table").select("tr:not(:has(th))");
+				Elements trs = Utils.jsoupSelect(page_HTML,
+						"table.detail_table").select("tr:not(:has(th))");
 
-			for (Element tr : trs)
-				try {
-					esami.add(new Esame(tr.children()));
-				} catch (Exception e) {
-					if(DEBUG)
-						Log.e(TAG, "Retrieve data: " + e.getMessage());
-				}
+				for (Element tr : trs)
+					try {
+						esami.add(new Esame(tr.children()));
+					} catch (Exception e) {
+						if (DEBUG)
+							Log.e(TAG, "Retrieve data: " + e.getMessage());
+					}
 
-			if (!pianoStudio.isEmpty()) {
-				for (String id : pianoStudio)
-					if (id.contains("Anno"))
-						adapter.addSeparatorItem(new Separator(id));
-					else
-						for (Esame e : esami)
-							if (e.getId().equals(id))
-								adapter.addItem(e);
+				if (!pianoStudio.isEmpty()) {
+					for (String id : pianoStudio)
+						if (id.contains("Anno"))
+							adapter.addSeparatorItem(new Separator(id));
+						else
+							for (Esame e : esami)
+								if (e.getId().equals(id))
+									adapter.addItem(e);
 
-				adapter.addSeparatorItem(new Separator("Attività formative a scelta dello studente"));
-				for (Esame e : esami)
-					if (!pianoStudio.contains(e.getId()))
+					adapter.addSeparatorItem(new Separator(
+							"Attività formative a scelta dello studente"));
+					for (Esame e : esami)
+						if (!pianoStudio.contains(e.getId()))
+							adapter.addItem(e);
+				} else
+					for (Esame e : esami)
 						adapter.addItem(e);
-			} else
-				for (Esame e : esami)
-					adapter.addItem(e);
+			}
+		} catch (Exception e) {
+			Utils.appendToLogFile("Libretto retrieveData()", e.getMessage());
 		}
 	}
 
@@ -247,7 +260,8 @@ public class Libretto extends ListActivity {
 		int result = 0;
 
 		for (Esame e : esami)
-			if (!e.getVoto().equals("APPR") && !e.getVoto().equals("IDO") && !e.getVoto().equals(""))
+			if (!e.getVoto().equals("APPR") && !e.getVoto().equals("IDO")
+					&& !e.getVoto().equals(""))
 				result++;
 
 		return result;
@@ -281,7 +295,8 @@ public class Libretto extends ListActivity {
 			else
 				try {
 					somma += Integer.parseInt(voto);
-				} catch (NumberFormatException ex) {}
+				} catch (NumberFormatException ex) {
+				}
 		}
 		try {
 			return arrotonda((double) somma / numeroEsami(), 2);
@@ -301,7 +316,8 @@ public class Libretto extends ListActivity {
 						.getCrediti());
 				somma += Integer.parseInt(voto) * crediti;
 				count += crediti;
-			} catch (NumberFormatException ex) {}
+			} catch (NumberFormatException ex) {
+			}
 		}
 
 		try {
@@ -312,7 +328,8 @@ public class Libretto extends ListActivity {
 	}
 
 	private double arrotonda(double numero, int nCifreDecimali) {
-		return Math.round(numero * Math.pow(10, nCifreDecimali)) / Math.pow(10, nCifreDecimali);
+		return Math.round(numero * Math.pow(10, nCifreDecimali))
+				/ Math.pow(10, nCifreDecimali);
 	}
 
 	private class SeparatedListAdapter extends ArrayAdapter<Row> {
@@ -369,7 +386,8 @@ public class Libretto extends ListActivity {
 
 		@Override
 		public int getItemViewType(int position) {
-			return separatorsSet.contains(position) ? TYPE_SEPARATOR : TYPE_ITEM;
+			return separatorsSet.contains(position) ? TYPE_SEPARATOR
+					: TYPE_ITEM;
 		}
 
 		@Override
@@ -380,36 +398,41 @@ public class Libretto extends ListActivity {
 			if (row == null) {
 				switch (type) {
 				case TYPE_ITEM:
-					row = getLayoutInflater().inflate(R.layout.libretto_item, parent, false);
+					row = getLayoutInflater().inflate(R.layout.libretto_item,
+							parent, false);
 					break;
 				case TYPE_SEPARATOR:
-					row = getLayoutInflater().inflate(R.layout.libretto_separator, parent, false);
+					row = getLayoutInflater().inflate(
+							R.layout.libretto_separator, parent, false);
 					break;
 				}
 			}
-			
+
 			switch (type) {
-			case TYPE_ITEM: 
+			case TYPE_ITEM:
 				Esame esame = (Esame) rows.get(position);
 
-				ImageView v = (ImageView) row.findViewById(R.id.libretto_item_bar);
-				TextView label = (TextView) row.findViewById(R.id.libretto_item_esame);
+				ImageView v = (ImageView) row
+						.findViewById(R.id.libretto_item_bar);
+				TextView label = (TextView) row
+						.findViewById(R.id.libretto_item_esame);
 				label.setText(esame.toString());
 
-				TextView voto = (TextView) row.findViewById(R.id.libretto_item_voto);
+				TextView voto = (TextView) row
+						.findViewById(R.id.libretto_item_voto);
 				voto.setText(esame.getVoto());
-				
+
 				if (esame.getVoto() != null && esame.getVoto().length() > 0)
 					v.setBackgroundResource(R.layout.green_bar);
 				else
 					v.setBackgroundResource(R.layout.red_bar);
 
 				break;
-			case TYPE_SEPARATOR: 
+			case TYPE_SEPARATOR:
 				Separator separator = (Separator) rows.get(position);
 				TextView vi = (TextView) row.findViewById(R.id.separator);
 				vi.setText(separator.getNome());
-				break;			
+				break;
 			}
 
 			return row;
@@ -442,7 +465,8 @@ public class Libretto extends ListActivity {
 				if (!isCancelled())
 					initStudyPlan();
 				if (!isCancelled())
-					retrieveData(cm.connection(ConnectionManager.ESSE3, Utils.TARGET_LIBRETTO, null));
+					retrieveData(cm.connection(ConnectionManager.ESSE3,
+							Utils.TARGET_LIBRETTO, null));
 			} else {
 				cm.setLogged(false);
 				showErrorMessage("Connessione NON attiva!");
@@ -452,17 +476,21 @@ public class Libretto extends ListActivity {
 
 		private void initStudyPlan() {
 			try {
-				String page_HTML = cm.connection(ConnectionManager.ESSE3, Utils.TARGET_PIANO_STUDIO, null);
-				Elements tables = Utils.jsoupSelect(page_HTML, "table.detail_table");
+				String page_HTML = cm.connection(ConnectionManager.ESSE3,
+						Utils.TARGET_PIANO_STUDIO, null);
+				Elements tables = Utils.jsoupSelect(page_HTML,
+						"table.detail_table");
 
 				for (int i = 0; i < tables.size() - 1; i++) {
-					pianoStudio.add("Attività didattiche - Anno di corso " + (i + 1));
+					pianoStudio.add("Attività didattiche - Anno di corso "
+							+ (i + 1));
 					Elements trs = tables.get(i).select("tr:not(:has(th))");
 					for (Element tr : trs)
 						pianoStudio.add(tr.select("td").get(0).text());
 				}
 			} catch (Exception e) {
-				if(DEBUG)
+				Utils.appendToLogFile("Libretto initStudyPlan()", e.getMessage());
+				if (DEBUG)
 					Log.e(TAG, "Piano studi: " + e.getMessage());
 				pianoStudio.clear();
 			}
@@ -470,7 +498,8 @@ public class Libretto extends ListActivity {
 
 		private void doReset() {
 			adapter.reset();
-			adapter = new SeparatedListAdapter(Libretto.this, R.layout.libretto_item);
+			adapter = new SeparatedListAdapter(Libretto.this,
+					R.layout.libretto_item);
 			pianoStudio.clear();
 			esami.clear();
 		}

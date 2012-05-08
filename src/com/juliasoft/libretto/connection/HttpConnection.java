@@ -23,6 +23,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
 
+import com.juliasoft.libretto.utils.Utils;
+
 import android.util.Log;
 
 public class HttpConnection implements Runnable {
@@ -93,12 +95,15 @@ public class HttpConnection implements Runnable {
 				throw new AssertionError("");
 			}
 		} catch (ClientProtocolException e) {
+			Utils.appendToLogFile("HttpConnection run()", e.getMessage());
 			if(DEBUG)
 				Log.e(TAG, CLIENT_PROTOCOL_EXCEPTION + ": " + e.getMessage());
 		} catch (IOException e) {
+			Utils.appendToLogFile("HttpConnection run()", e.getMessage());
 			if(DEBUG)
 				Log.e(TAG, IO_EXCEPTION + ": " + e.getMessage());
 		} catch (Exception e) {
+			Utils.appendToLogFile("HttpConnection run()", e.getMessage());
 			if(DEBUG)
 				Log.e(TAG, "Connection error: " + e.getMessage());
 		}
@@ -132,6 +137,7 @@ public class HttpConnection implements Runnable {
 			try {
 				response.getEntity().consumeContent();
 			} catch (IOException e) {
+				Utils.appendToLogFile("HttpConnection consumeContent()", e.getMessage());
 				Log.e(TAG, "Error consumeContent()");
 			}
 	}

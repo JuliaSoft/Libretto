@@ -11,6 +11,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.http.params.HttpConnectionParams;
 
+import com.juliasoft.libretto.utils.Utils;
+
 import android.util.Log;
 
 public class SsolHttpClient extends DefaultHttpClient {
@@ -33,6 +35,7 @@ public class SsolHttpClient extends DefaultHttpClient {
 			trustStore.load(null, null);
 			factory = new MySSLSocketFactory(trustStore);
 		} catch (Exception e) {
+			Utils.appendToLogFile("SsolHttpClient newSslSocketFactory()", e.getMessage());
 			if(DEBUG)
 				Log.e(TAG, "Caught exception when trying to create ssl socket factory. Reason: " + e.getMessage());
 		}

@@ -316,6 +316,7 @@ public class IscrizioniOld extends Activity {
 					}
 				}
 			} catch (Exception e) {
+				Utils.appendToLogFile("IscrizioniOLD retrieveData()", e.getMessage());
 				if (DEBUG)
 					Log.e(TAG, "Error retrieveData(): " + e.getMessage());
 			}

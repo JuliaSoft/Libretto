@@ -42,11 +42,11 @@ public class Questionario extends Activity {
 
 	private static final boolean DEBUG = true;
 	private static final String TAG = Questionario.class.getName();
-	
+
 	private static final int SUCCESS = 0;
 	private static final int LOAD = 1;
 	private static final int ERROR_MESSAGE = 2;
-	
+
 	private static final int PROGRESS_DIALOG_ID = 3;
 	private static final int ERROR_DIALOG_ID = 4;
 
@@ -163,22 +163,21 @@ public class Questionario extends Activity {
 		progressDialog.setCancelable(true);
 		progressDialog.setMessage("Loading ...");
 
-		allertDialog = new AlertDialog
-				.Builder(Questionario.this)
+		allertDialog = new AlertDialog.Builder(Questionario.this)
 				.setTitle("Questionario")
-				.setIcon(android.R.drawable.ic_dialog_alert)
-				.create();
+				.setIcon(android.R.drawable.ic_dialog_alert).create();
 		allertDialog.setButton("OK", new DialogInterface.OnClickListener() {
 
 			@Override
-			public void onClick(DialogInterface dialog, int which) {				
+			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 				finish();
 			}
 		});
 
 		allertDialog.getWindow().getAttributes().dimAmount = 0.5f;
-		allertDialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		allertDialog.getWindow().addFlags(
+				WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 	}
 
 	private void initWebView() {
@@ -189,15 +188,14 @@ public class Questionario extends Activity {
 
 		// Add javascript interface only if it's not broken
 		if (!javascriptInterfaceBroken)
-			webView.addJavascriptInterface(new QuestionarioJSInterface(), "droid");
+			webView.addJavascriptInterface(new QuestionarioJSInterface(),
+					"droid");
 
 		webView.setWebChromeClient(new WebChromeClient() {
 			@Override
-			public boolean onJsConfirm(WebView view,
-									   final String url,
-									   String message, 
-									   final JsResult result) {
-				
+			public boolean onJsConfirm(WebView view, final String url,
+					String message, final JsResult result) {
+
 				new AlertDialog.Builder(Questionario.this)
 						.setTitle("Questionario")
 						.setMessage(message)
@@ -214,16 +212,14 @@ public class Questionario extends Activity {
 											int which) {
 										result.cancel();
 									}
-								})
-						.create()
-						.show();
+								}).create().show();
 
 				return true;
 			}
 		});
 
 		webView.setOnTouchListener(new View.OnTouchListener() {
-			
+
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				switch (event.getAction()) {
@@ -250,9 +246,9 @@ public class Questionario extends Activity {
 			CookieSyncManager.createInstance(this);
 			CookieManager cookieManager = CookieManager.getInstance();
 			for (Cookie sessionInfo : cookies) {
-				String cookieString = sessionInfo.getName() 
-						+ "=" + sessionInfo.getValue() 
-						+ "; domain=" + sessionInfo.getDomain();
+				String cookieString = sessionInfo.getName() + "="
+						+ sessionInfo.getValue() + "; domain="
+						+ sessionInfo.getDomain();
 				cookieManager.setCookie(SsolHttpClient.AUTH_URI, cookieString);
 				CookieSyncManager.getInstance().sync();
 			}
@@ -261,7 +257,14 @@ public class Questionario extends Activity {
 
 	private void loadQuestionario() {
 		if (questionario_HTML != null)
-			webView.loadDataWithBaseURL(SsolHttpClient.AUTH_URI, questionario_HTML, "text/html", "UTF-8", null);
+			try {
+				webView.loadDataWithBaseURL(SsolHttpClient.AUTH_URI,
+						questionario_HTML, "text/html", "UTF-8", null);
+			} catch (Exception e) {
+				Utils.appendToLogFile("Questionario loadQuestionario()",
+						e.getMessage());
+
+			}
 	}
 
 	private void callHiddenWebViewMethod(String name) {
@@ -269,15 +272,9 @@ public class Questionario extends Activity {
 			try {
 				Method method = WebView.class.getMethod(name);
 				method.invoke(webView);
-			} catch (NoSuchMethodException e) {
-				if (DEBUG)
-					Log.e(TAG, "No such method " + name + ": " + e.getMessage());
-			} catch (IllegalAccessException e) {
-				if (DEBUG)
-					Log.e(TAG, "Illegal Access " + name + ": " + e.getMessage());
-			} catch (InvocationTargetException e) {
-				if (DEBUG)
-					Log.e(TAG, "Invocation Target Exception " + name + ": " + e.getMessage());
+			} catch (Exception e) {
+				Utils.appendToLogFile("Questionario callHiddenWebViewMethod()",
+						e.getMessage());
 			}
 		}
 	}
@@ -293,7 +290,7 @@ public class Questionario extends Activity {
 		public void onPageStarted(WebView view, String url, Bitmap favicon) {
 			if (Utils.isNetworkAvailable(Questionario.this)) {
 				if (!loadJS)
-					viewSwitcher.showPrevious(); 
+					viewSwitcher.showPrevious();
 
 				super.onPageStarted(view, url, favicon);
 			} else {
@@ -310,7 +307,7 @@ public class Questionario extends Activity {
 			if (update && !javascriptInterfaceBroken) {
 				progressDialog.setMessage("load questionnaire ...");
 				loadJS = true;
-				webView. loadUrl("javascript:window.droid.questJS(document.getElementsByTagName('html')[0].innerHTML);");
+				webView.loadUrl("javascript:window.droid.questJS(document.getElementsByTagName('html')[0].innerHTML);");
 			} else {
 				progressDialog.setMessage("success ...");
 				viewSwitcher.showNext();
@@ -321,13 +318,12 @@ public class Questionario extends Activity {
 		}
 
 		@Override
-		public void onReceivedError(WebView view, 
-									int errorCode,
-									String description,
-									String failingUrl) {
-			
+		public void onReceivedError(WebView view, int errorCode,
+				String description, String failingUrl) {
+
 			progressDialog.dismiss();
-			Toast.makeText(Questionario.this, "Oh no! " + description, Toast.LENGTH_SHORT).show();
+			Toast.makeText(Questionario.this, "Oh no! " + description,
+					Toast.LENGTH_SHORT).show();
 		}
 
 		@Override
@@ -368,7 +364,8 @@ public class Questionario extends Activity {
 			Matcher matcher = pattern.matcher(questionario_HTML);
 
 			if (matcher.find())
-				matcher.appendReplacement(sb, "<body><script type=\"text/javascript\">");
+				matcher.appendReplacement(sb,
+						"<body><script type=\"text/javascript\">");
 
 			matcher.appendTail(sb);
 			questionario_HTML = sb.toString();

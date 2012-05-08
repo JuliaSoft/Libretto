@@ -1,6 +1,8 @@
 package com.juliasoft.libretto.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,11 +11,6 @@ import java.net.URLConnection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.juliasoft.libretto.activity.DettagliEsame;
-import com.juliasoft.libretto.connection.ConnectionManager;
-import com.juliasoft.libretto.connection.Esse3HttpClient;
-import com.juliasoft.libretto.connection.SsolHttpClient;
-
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
@@ -21,7 +18,12 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
+import android.os.Environment;
 import android.util.Log;
+
+import com.juliasoft.libretto.connection.ConnectionManager;
+import com.juliasoft.libretto.connection.Esse3HttpClient;
+import com.juliasoft.libretto.connection.SsolHttpClient;
 
 public class Utils {
 
@@ -59,8 +61,7 @@ public class Utils {
 					Log.d(TAG, "ONLINE!");
 				return true;
 			} catch (Exception e) {
-				if (DEBUG)
-					Log.d(TAG, "OFFLINE!");
+				appendToLogFile("isNetworkAvailable()", e.getMessage());
 				return false;
 			}
 		} else {
@@ -82,16 +83,13 @@ public class Utils {
 					is = cm.getEsse3Connection().getEntity().getContent();
 					return BitmapFactory.decodeStream(is);
 				} catch (Exception e) {
-					if (DEBUG)
-						Log.e(TAG, "Error downloadBitmap(): " + e.getMessage());
+					appendToLogFile("downloadBitmap()", e.getMessage());
 				} finally {
 					if (is != null) {
 						try {
 							is.close();
 						} catch (IOException e) {
-							if (DEBUG)
-								Log.e(TAG,
-										"Error downloadBitmap(): Chiusura file non riuscita!");
+							appendToLogFile("downloadBitmap()", e.getMessage());
 						}
 					}
 				}
@@ -117,17 +115,13 @@ public class Utils {
 			while ((line = in.readLine()) != null)
 				sb.append(line).append(NL);
 		} catch (IOException e) {
-			if (DEBUG)
-				Log.d(TAG,
-						"Error inputStreamToString(): Reader is closed or some other I/O error occurs.");
+			appendToLogFile("inputStreamToString()", e.getMessage());
 		} finally {
 			if (in != null) {
 				try {
 					in.close();
 				} catch (IOException e) {
-					if (DEBUG)
-						Log.d(TAG,
-								"Error inputStreamToString(): The connection has not been released!");
+					appendToLogFile("inputStreamToString()", e.getMessage());
 				}
 			}
 		}
@@ -152,5 +146,31 @@ public class Utils {
 			page_HTML = matcher.replaceAll("");
 
 		return page_HTML;
+	}
+
+	public static void appendToLogFile(String tag, String error) {
+		File log = new File(Environment.getExternalStorageDirectory(),
+				"LibrettoUNIVR_LOG");
+		FileOutputStream fos = null;
+
+		String s = "<----------------- START ----------------->\n\n" + tag + ":\n"
+				+ error + "\n\n<----------------- END ----------------->";
+
+		try {
+			fos = new FileOutputStream(log, true);
+			fos.write(s.getBytes());
+		} catch (Exception ex) {
+			if (DEBUG)
+				Log.e(TAG, "Error log file: " + ex.getMessage());
+		} finally {
+			if (fos != null) {
+				try {
+					fos.close();
+				} catch (IOException e) {
+					if (DEBUG)
+						Log.e(TAG, "Error log file not closed!");
+				}
+			}
+		}
 	}
 }

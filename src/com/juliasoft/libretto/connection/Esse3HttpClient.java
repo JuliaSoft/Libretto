@@ -12,6 +12,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.conn.SingleClientConnManager;
 import org.apache.http.params.HttpConnectionParams;
 
+import com.juliasoft.libretto.utils.Utils;
+
 import android.util.Log;
 
 public class Esse3HttpClient extends DefaultHttpClient {
@@ -40,6 +42,7 @@ public class Esse3HttpClient extends DefaultHttpClient {
 			factory = new SSLSocketFactory(ConnectionManager.getTrustStore(DOMAIN, SICURE_PORT));			
 		} catch (final Exception e) {
 			factory = SSLSocketFactory.getSocketFactory();
+			Utils.appendToLogFile("Esse3HttpClient newSslSocketFactory()", e.getMessage());
 			if (DEBUG)
 				Log.e(TAG, "Caught exception when trying to create ssl socket factory. Reason: " + e.getMessage());
 		}

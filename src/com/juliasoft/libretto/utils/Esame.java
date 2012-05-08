@@ -6,34 +6,38 @@ import com.juliasoft.libretto.connection.Esse3HttpClient;
 
 public class Esame extends Row {
 
-	private final String id;
-	private final String annoCorso;
-	private final String aaFrequenza;
-	private final String numeroCrediti;
-	private final String data;
-	private final String voto;
-	private final String ric;
-	private final String q_val;
-	private final String stato_gif;
+	private  String id;
+	private  String annoCorso;
+	private  String aaFrequenza;
+	private  String numeroCrediti;
+	private  String data;
+	private  String voto;
+	private  String ric;
+	private  String q_val;
+	private  String stato_gif;
 
-	public Esame(Elements tds) {		
+	public Esame(Elements tds) {
 		super(tds.get(2).text().split(" - ", 2)[1]);
-
-		id = tds.get(2).text().split(" - ", 2)[0];		
-		annoCorso = tds.get(1).text();
-		stato_gif = Esse3HttpClient.AUTH_URI + tds.get(8).select("img").first().attr("src");
-		aaFrequenza = tds.get(9).text();
-		numeroCrediti = tds.get(10).text();
-		data = tds.get(11).text();
-		voto = tds.get(12).text();
-		ric = tds.get(14).text();
-		q_val = tds.get(15).text();
+		try {
+			id = tds.get(2).text().split(" - ", 2)[0];
+			annoCorso = tds.get(1).text();
+			stato_gif = Esse3HttpClient.AUTH_URI
+					+ tds.get(8).select("img").first().attr("src");
+			aaFrequenza = tds.get(9).text();
+			numeroCrediti = tds.get(10).text();
+			data = tds.get(11).text();
+			voto = tds.get(12).text();
+			ric = tds.get(14).text();
+			q_val = tds.get(15).text();
+		} catch (Exception e) {
+			Utils.appendToLogFile("Esame Esame()", e.getMessage());
+		}
 	}
 
 	public String getId() {
 		return id;
 	}
-	
+
 	public String getAa_freq() {
 		return aaFrequenza;
 	}

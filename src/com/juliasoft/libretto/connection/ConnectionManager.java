@@ -89,6 +89,7 @@ public class ConnectionManager {
 			if (DEBUG)
 				Log.i(TAG, "Login to Ssol successful!");
 		} catch (IOException e) {
+			Utils.appendToLogFile("ConnectionManager authenticate()", e.getMessage());
 			if (DEBUG)
 				Log.e(TAG, e.getMessage());
 		}
@@ -133,6 +134,7 @@ public class ConnectionManager {
 				return getHTML(ssolConn, url, params);
 			}
 		} catch (Exception e) {
+			Utils.appendToLogFile("ConnectionManager connection()", e.getMessage());
 			isLogged = false;
 			if (DEBUG)
 				Log.e(TAG, "Connection error: " + e.getMessage());

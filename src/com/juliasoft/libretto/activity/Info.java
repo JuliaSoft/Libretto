@@ -234,6 +234,7 @@ public class Info extends Activity {
 					return true;
 				}
 			} catch (Exception e) {
+				Utils.appendToLogFile("Info retrieveData()", e.getMessage());
 				if (DEBUG)
 					Log.e(TAG, "Retrieving data: " + e.getMessage());
 			}
