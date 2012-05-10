@@ -150,7 +150,7 @@ public class Utils {
 
 	public static void appendToLogFile(String tag, String error) {
 		File log = new File(Environment.getExternalStorageDirectory(),
-				"LibrettoUNIVR_LOG");
+				"LibrettoUNIVR_LOG.txt");
 		FileOutputStream fos = null;
 
 		String s = "<----------------- START ----------------->\n\n" + tag + ":\n"
