@@ -6,11 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.HttpConnection;
+import org.apache.http.client.HttpClient;
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
 
@@ -47,28 +49,32 @@ public class Utils {
 	public static boolean isNetworkAvailable(Context context) {
 		ConnectivityManager connectivity = (ConnectivityManager) context
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
-
+		
 		if (connectivity.getActiveNetworkInfo() != null
 				&& connectivity.getActiveNetworkInfo().isAvailable()
 				&& connectivity.getActiveNetworkInfo().isConnected()) {
 
 			try {
-				URLConnection httpConn = new URL("http://www.google.it")
-						.openConnection();
-				httpConn.setConnectTimeout(5000);
+				
+				HttpURLConnection httpConn = (HttpURLConnection) new URL(
+						"http://m.google.com").openConnection();
+				httpConn.setRequestProperty("User-Agent", "Android Application");
+				httpConn.setRequestProperty("Connection", "close");
+				httpConn.setConnectTimeout(1000 * 5);
 				httpConn.connect();
-				if (DEBUG)
-					Log.d(TAG, "ONLINE!");
-				return true;
+				if (httpConn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+					if (DEBUG)
+						Log.d(TAG, "ONLINE!");
+					return new Boolean(true);
+				}
 			} catch (Exception e) {
 				appendToLogFile("isNetworkAvailable()", e.getMessage());
-				return false;
 			}
-		} else {
-			if (DEBUG)
-				Log.d(TAG, "OFFLINE!");
-			return false;
 		}
+
+		if (DEBUG)
+			Log.d(TAG, "OFFLINE!");
+		return new Boolean(false);
 	}
 
 	public static Bitmap downloadBitmap(Context context, String fileUrl) {
@@ -153,8 +159,9 @@ public class Utils {
 				"LibrettoUNIVR_LOG.txt");
 		FileOutputStream fos = null;
 
-		String s = "<----------------- START ----------------->\n\n" + tag + ":\n"
-				+ error + "\n\n<----------------- END ----------------->";
+		String s = "<----------------- START ----------------->\n\n" + tag
+				+ ":\n" + error
+				+ "\n\n<----------------- END ----------------->\n";
 
 		try {
 			fos = new FileOutputStream(log, true);
