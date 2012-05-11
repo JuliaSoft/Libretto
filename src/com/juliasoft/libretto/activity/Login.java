@@ -147,6 +147,9 @@ public class Login extends Activity {
 		initDialog();
 		makeLoginPasswordRequired();
 		setLinkToJuliaSrl();
+		
+		if(saveLogin)
+			doLogin();
 	}
 
 	private void initDialog() {
@@ -228,8 +231,11 @@ public class Login extends Activity {
 				
 			}
 		});
-		if (saveUser)
-			passwordEdit.setText(loginPreferences.getString(PREF_PASSWORD, ""));
+		
+		if (saveUser) {
+			password = loginPreferences.getString(PREF_PASSWORD, "");
+			passwordEdit.setText(password);
+		}
 	}
 
 	private void initUserNameEditTextWithConstraints(boolean savePass) {
@@ -280,8 +286,10 @@ public class Login extends Activity {
 			}
 		});
 
-		if (savePass)
-			usernameEdit.setText(loginPreferences.getString(PREF_USERNAME, ""));
+		if (savePass) {
+			username = loginPreferences.getString(PREF_USERNAME, "");
+			usernameEdit.setText(username);
+		}
 
 		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 		imm.hideSoftInputFromWindow(usernameEdit.getWindowToken(), 0);
