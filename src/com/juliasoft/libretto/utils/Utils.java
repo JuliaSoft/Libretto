@@ -30,7 +30,7 @@ import com.juliasoft.libretto.connection.SsolHttpClient;
 public class Utils {
 
 	private static final boolean DEBUG = true;
-	public static final String TAG = Utils.class.getName();
+	private static final String TAG = Utils.class.getName();
 	/********************************** LINK FACOLT� **********************************/
 	public static final String TARGET_LIBRETTO = Esse3HttpClient.AUTH_URI
 			+ "auth/studente/Libretto/LibrettoHome.do";
@@ -43,19 +43,21 @@ public class Utils {
 	public static final String TARGET_ISCRIZIONI_OLD = SsolHttpClient.AUTH_URI
 			+ "main?ent=ieappellics";
 
+	public static final String pattern_URL = "^(http|https)\\://[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,3}(:[a-zA-Z0-9]*)?/?([a-zA-Z0-9\\-\\._\\?\\,\\'/\\\\\\+&amp;%\\$#\\=~])*[^\\.\\,\\)\\(\\s]$";
+
 	/*
 	 * @return boolean return true if the application can access the internet
 	 */
 	public static boolean isNetworkAvailable(Context context) {
 		ConnectivityManager connectivity = (ConnectivityManager) context
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
-		
+
 		if (connectivity.getActiveNetworkInfo() != null
 				&& connectivity.getActiveNetworkInfo().isAvailable()
 				&& connectivity.getActiveNetworkInfo().isConnected()) {
 
 			try {
-				
+
 				HttpURLConnection httpConn = (HttpURLConnection) new URL(
 						"http://m.google.com").openConnection();
 				httpConn.setRequestProperty("User-Agent", "Android Application");
@@ -139,7 +141,7 @@ public class Utils {
 		if (link == null || link.equals(""))
 			return false;
 
-		Pattern pattern = Pattern.compile("(http|https)\\://(.*?)");
+		Pattern pattern = Pattern.compile(pattern_URL, Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(link);
 		return matcher.matches();
 	}
